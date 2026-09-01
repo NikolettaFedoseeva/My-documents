@@ -14,7 +14,7 @@
                          "sass-loader":  "^13.2.1",
                          "vue":  "^3.3.4",
                          "vue-router":  "^4.2.2",
-                         "lern-ui-kit":  "git+https://github.com/NikolettaFedoseeva/ui_kit.git"
+                         "lern-ui-kit":  "git+https://github.com/NikolettaFedoseeva/ui_kit.git#release-1.0.0.0"
                      },
     "devDependencies":  {
                             "@types/js-cookie":  "^3.0.3",

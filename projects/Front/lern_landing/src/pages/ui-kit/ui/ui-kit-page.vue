@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useTheme, type AppTheme } from '@/shared/lib/theme'
 import {
+  useTheme,
+  type AppTheme,
   UiButton,
   UiBadge,
   UiCard,
@@ -17,20 +18,20 @@ import {
   UiTable,
   UiCarousel,
   InteractiveFlashcard,
-  type QuestionData,
-  type QuestionOption,
-  type TabItem,
-  type DropdownOption,
-  type TableColumn,
-} from '@/shared/ui'
+  TabItem,
+  QuestionData,
+  QuestionOption,
+  DropdownOption,
+  TableColumn,
+} from 'lern-ui-kit'
 
 // #region Theme Management
 const { currentTheme, themes, setTheme } = useTheme()
 // #endregion Theme Management
 
-// #region Active Tab for Codex Showcase
-const activeTab = ref<'search' | 'nav' | 'article' | 'quiz'>('article')
-// #endregion Active Tab
+// #region Navigation Demo Tabs
+const activeTab = ref<'search' | 'nav' | 'article' | 'quiz'>('search')
+// #endregion Navigation Demo Tabs
 
 // #region Component States Demo
 const selectedDemoTab = ref<string>('vue3')
@@ -70,9 +71,10 @@ const tableData = [
 ]
 // #endregion Component States Demo
 
-// #region Demo Data
+// #region Active Recall & Quiz Demo
 const demoQuestion: QuestionData = {
-  id: 'q-1',
+  id: 'q-101',
+  title: 'Механизмы реактивности Vue 3',
   category: 'Frontend',
   section: 'Vue 3 & Reactivity',
   difficulty: 'medium',
@@ -100,26 +102,25 @@ const quizOptions: QuestionOption[] = [
   },
 ]
 
-const selectedQuizOption = ref<string>('opt-b')
+const selectedQuizOption = ref<string | null>(null)
 const isQuizSubmitted = ref<boolean>(false)
 const sampleRatingResult = ref<string | null>(null)
-const sampleInputValue = ref<string>('')
-const sampleErrorValue = ref<string>('Некорректный формат E-mail')
 
 const onRateQuestion = (payload: { id: string | number; rating: string }) => {
-  sampleRatingResult.value = `Вы оценили вопрос как: "${
-    payload.rating === 'know' ? 'Знаю 🟢' : payload.rating === 'doubt' ? 'Сомневаюсь 🟡' : 'Повторить 🔴'
-  }"`
+  sampleRatingResult.value = 'Вы оценили вопрос как: ' + (payload.rating === 'know' ? 'Знаю 🟢' : payload.rating === 'doubt' ? 'Сомневаюсь 🟡' : 'Повторить 🔴')
 }
 
 const onSubmitQuiz = () => {
-  isQuizSubmitted.value = true
+  if (selectedQuizOption.value) {
+    isQuizSubmitted.value = true
+  }
 }
 
 const onResetQuiz = () => {
+  selectedQuizOption.value = null
   isQuizSubmitted.value = false
 }
-// #endregion Demo Data
+// #endregion Active Recall & Quiz Demo
 </script>
 
 <template>
@@ -133,7 +134,6 @@ const onResetQuiz = () => {
         </p>
       </div>
 
-      <!-- Theme Switcher Selector -->
       <div class="ui-kit-theme-switcher">
         <label class="ui-kit-theme-switcher__label">Выбор визуального стиля:</label>
         <div class="ui-kit-theme-switcher__options">
@@ -151,7 +151,7 @@ const onResetQuiz = () => {
       </div>
     </header>
 
-    <!-- Main Navigation Tabs for 4 Codex Pages -->
+    <!-- Navigation Bar: 4 Screens (Bookish Codex Concept) -->
     <nav class="codex-nav-tabs">
       <button
         class="codex-nav-tab"
@@ -194,8 +194,8 @@ const onResetQuiz = () => {
       </button>
     </nav>
 
-    <main class="ui-kit-content">
-      <!-- TAB 1: SEARCH & SECTIONS -->
+    <!-- SCREEN 01: Search & Categories -->
+    <main class="codex-main">
       <section v-if="activeTab === 'search'" class="codex-screen">
         <UiCard variant="glass" padding="lg">
           <div class="codex-header-banner">
@@ -211,7 +211,7 @@ const onResetQuiz = () => {
             </UiInput>
           </div>
 
-          <div class="codex-section-grid">
+          <div class="codex-dashboard-grid">
             <div class="codex-continue-card">
               <div class="codex-continue-card__badge">Продолжить:</div>
               <h4 class="codex-continue-card__title">watch и watchEffect</h4>
@@ -240,15 +240,14 @@ const onResetQuiz = () => {
         </UiCard>
       </section>
 
-      <!-- TAB 2: KNOWLEDGE MAP (STACKED BOOKMARKS) -->
+      <!-- SCREEN 02: Knowledge Map -->
       <section v-if="activeTab === 'nav'" class="codex-screen">
         <UiCard variant="glass" padding="lg">
           <div class="codex-map-header">
             <UiBadge variant="primary">КАРТА ЗНАНИЙ ★</UiBadge>
           </div>
 
-          <!-- Stacked Bookmark Cards (01 -> 02 -> 03 -> 04 -> 05) -->
-          <div class="stacked-bookmarks">
+          <div class="bookmark-cards-stack">
             <div class="bookmark-card bookmark-card--lvl1">01 Программирование</div>
             <div class="bookmark-card bookmark-card--lvl2">02 Frontend</div>
             <div class="bookmark-card bookmark-card--lvl3">03 Vue 3</div>
@@ -277,7 +276,7 @@ const onResetQuiz = () => {
         </UiCard>
       </section>
 
-      <!-- TAB 3: ARTICLE READER -->
+      <!-- SCREEN 03: Article Reader -->
       <section v-if="activeTab === 'article'" class="codex-screen">
         <UiCard variant="glass" padding="lg">
           <div class="article-header">
@@ -307,16 +306,13 @@ const onResetQuiz = () => {
               <strong>watchEffect</strong> автоматически отслеживает используемые реактивные зависимости внутри колбэка и запускается сразу, а затем — при любом их изменении.
             </p>
 
-            <!-- Code Box -->
             <div class="code-block">
               <div class="code-block__header">Пример: watch</div>
-              <pre><code><span class="code-num">1</span> import { ref, watch } from 'vue'
-<span class="code-num">2</span> 
-<span class="code-num">3</span> const count = ref(0)
-<span class="code-num">4</span> 
-<span class="code-num">5</span> watch(count, (newValue, oldValue) => {
-<span class="code-num">6</span>   console.log(`count: ${oldValue} => ${newValue}`)
-<span class="code-num">7</span> })</code></pre>
+              <pre><code>1 | import { ref, watch } from 'vue'
+2 | const count = ref(0)
+3 | watch(count, (newVal, oldVal) => {
+4 |   console.log('Count изменился')
+5 | })</code></pre>
             </div>
           </div>
 
@@ -328,7 +324,7 @@ const onResetQuiz = () => {
         </UiCard>
       </section>
 
-      <!-- TAB 4: QUIZ & ACTIVE RECALL -->
+      <!-- SCREEN 04: Self-Quiz -->
       <section v-if="activeTab === 'quiz'" class="codex-screen">
         <UiCard variant="glass" padding="lg">
           <div class="quiz-header">
@@ -338,8 +334,7 @@ const onResetQuiz = () => {
           </div>
 
           <div class="quiz-step-bar">
-            <span class="quiz-step-num">01 / 03</span>
-            <UiProgressBar :value="33" size="sm" style="flex: 1" />
+            <UiProgressBar :value="33" size="sm" />
           </div>
 
           <UiQuestion
@@ -369,7 +364,6 @@ const onResetQuiz = () => {
             </UiButton>
           </div>
 
-          <!-- Active Recall 3D Flip Flashcard -->
           <div class="quiz-flashcard-wrapper">
             <h3 class="quiz-flashcard-title">🃏 Тренaжёр Active Recall (3D Flip)</h3>
             <InteractiveFlashcard :data="demoQuestion" @rate="onRateQuestion" />
@@ -388,14 +382,12 @@ const onResetQuiz = () => {
         </div>
 
         <UiCard variant="glass">
-          <div class="ui-kit-grid">
-            <!-- 1. Tabs & Toggles -->
+          <div class="ui-kit-components-grid">
             <div class="ui-kit-group">
               <h3>Переключатель Вкладок (UiTabs)</h3>
               <UiTabs v-model="selectedDemoTab" :items="demoTabs" />
             </div>
 
-            <!-- 2. Avatars -->
             <div class="ui-kit-group">
               <h3>Аватары Пользователей (UiAvatar)</h3>
               <div class="ui-kit-row">
@@ -406,7 +398,6 @@ const onResetQuiz = () => {
               </div>
             </div>
 
-            <!-- 3. Alerts -->
             <div class="ui-kit-group">
               <h3>Системные Уведомления (UiAlert)</h3>
               <div class="ui-kit-grid">
@@ -422,7 +413,6 @@ const onResetQuiz = () => {
               </div>
             </div>
 
-            <!-- 4. Progress Bars -->
             <div class="ui-kit-group">
               <h3>Индикаторы Прогресса (UiProgressBar)</h3>
               <div class="ui-kit-grid">
@@ -432,7 +422,6 @@ const onResetQuiz = () => {
               </div>
             </div>
 
-            <!-- 5. Toggles -->
             <div class="ui-kit-group">
               <h3>Тумблеры-Переключатели (UiToggle)</h3>
               <div class="ui-kit-row">
@@ -441,7 +430,6 @@ const onResetQuiz = () => {
               </div>
             </div>
 
-            <!-- 6. Dropdowns -->
             <div class="ui-kit-group">
               <h3>Выпадающий список (UiDropdown)</h3>
               <div style="max-width: 320px">
@@ -449,7 +437,6 @@ const onResetQuiz = () => {
               </div>
             </div>
 
-            <!-- 7. Tables -->
             <div class="ui-kit-group">
               <h3>Таблица Данных (UiTable)</h3>
               <UiTable :columns="tableColumns" :data="tableData">
@@ -461,7 +448,6 @@ const onResetQuiz = () => {
               </UiTable>
             </div>
 
-            <!-- 8. Carousel -->
             <div class="ui-kit-group">
               <h3>Карусель / Слайдер (UiCarousel)</h3>
               <UiCarousel :items-count="3">
@@ -480,7 +466,6 @@ const onResetQuiz = () => {
               </UiCarousel>
             </div>
 
-            <!-- 9. Modals -->
             <div class="ui-kit-group">
               <h3>Модальные окна (UiModal)</h3>
               <div>
@@ -509,30 +494,31 @@ const onResetQuiz = () => {
 
 <style scoped lang="scss">
 .ui-kit-page {
-  min-height: 100vh;
-  padding: 2.5rem 1.5rem;
-  max-width: 1100px;
+  max-width: 1200px;
   margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
 }
 
 .ui-kit-header {
-  margin-bottom: 2rem;
   display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  padding-bottom: 1.75rem;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 2rem;
+  padding-bottom: 1.5rem;
   border-bottom: 1px solid var(--border-color);
 
   &__title {
     font-size: 2rem;
     font-weight: 800;
     color: var(--text-main);
-    letter-spacing: -0.02em;
   }
 
   &__subtitle {
-    font-size: 1rem;
     color: var(--text-muted);
+    font-weight: 500;
     margin-top: 0.25rem;
   }
 }
@@ -540,39 +526,43 @@ const onResetQuiz = () => {
 .ui-kit-theme-switcher {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  align-items: flex-end;
+  gap: 0.5rem;
 
   &__label {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: var(--primary);
+    color: var(--text-muted);
   }
 
   &__options {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.75rem;
+    gap: 0.4rem;
+    max-width: 440px;
+    justify-content: flex-end;
   }
 }
 
 .ui-kit-theme-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.6rem 1.1rem;
-  border-radius: var(--radius-md);
+  gap: 0.4rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--radius-sm);
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   color: var(--text-main);
+  font-size: 0.82rem;
   font-weight: 600;
-  font-size: 0.9rem;
+  cursor: pointer;
   transition: all 0.2s ease;
 
   &:hover {
     background: var(--bg-card-hover);
-    border-color: var(--border-color-glow);
+    border-color: var(--primary);
   }
 
   &--active {
@@ -583,37 +573,37 @@ const onResetQuiz = () => {
   }
 }
 
-/* Navigation Tabs for 4 Codex Pages */
 .codex-nav-tabs {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
   gap: 0.75rem;
-  margin-bottom: 2.5rem;
-  overflow-x: auto;
-  padding-bottom: 0.5rem;
 }
 
 .codex-nav-tab {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 0.6rem;
-  padding: 0.85rem 1.4rem;
+  padding: 0.9rem 1.25rem;
   border-radius: var(--radius-md);
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  color: var(--text-main);
+  color: var(--text-muted);
   font-weight: 700;
-  font-size: 0.95rem;
   cursor: pointer;
   transition: all 0.2s ease;
 
   &__num {
+    font-size: 0.75rem;
     opacity: 0.6;
-    font-size: 0.8rem;
+  }
+
+  &__icon {
+    font-size: 1.1rem;
   }
 
   &:hover {
     background: var(--bg-card-hover);
-    border-color: var(--border-color-glow);
+    color: var(--text-main);
   }
 
   &--active {
@@ -621,73 +611,61 @@ const onResetQuiz = () => {
     color: var(--text-inverse);
     border-color: transparent;
     box-shadow: var(--shadow-glow);
-
-    .codex-nav-tab__num {
-      opacity: 0.9;
-    }
   }
 }
 
-.ui-kit-content {
+.codex-main {
   display: flex;
   flex-direction: column;
-  gap: 3rem;
+  gap: 2.5rem;
 }
 
-/* Codex Screens */
 .codex-header-banner {
   text-align: center;
-  padding: 1.5rem 0;
-  border-bottom: 1px solid var(--border-color);
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
 
   &__symbol {
     font-size: 2.5rem;
-    margin-bottom: 0.5rem;
   }
 
   &__title {
-    font-size: 2rem;
+    font-size: 1.8rem;
     font-weight: 800;
-    color: var(--text-main);
   }
 
   &__sub {
-    font-size: 1rem;
     color: var(--text-muted);
-    font-style: italic;
   }
 }
 
 .codex-search-box {
-  margin-bottom: 2rem;
+  max-width: 600px;
+  margin: 0 auto 2rem;
 }
 
-.codex-section-grid {
+.codex-dashboard-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: 1fr 1fr;
   gap: 1.5rem;
 }
 
 .codex-continue-card {
-  padding: 1.25rem;
+  padding: 1.5rem;
   border-radius: var(--radius-md);
   background: var(--bg-card-hover);
-  border: 1px solid var(--border-color-glow);
+  border: 1px solid var(--border-color);
 
   &__badge {
     font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--primary);
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-muted);
-    margin-bottom: 0.35rem;
   }
 
   &__title {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--text-main);
-    margin-bottom: 1rem;
+    font-size: 1.2rem;
+    font-weight: 800;
+    margin: 0.5rem 0 1rem;
   }
 }
 
@@ -697,10 +675,9 @@ const onResetQuiz = () => {
   gap: 0.75rem;
 
   h3 {
-    font-size: 0.9rem;
+    font-size: 1rem;
     font-weight: 700;
-    color: var(--text-muted);
-    text-transform: uppercase;
+    margin-bottom: 0.25rem;
   }
 }
 
@@ -710,13 +687,12 @@ const onResetQuiz = () => {
   gap: 0.75rem;
   padding: 0.75rem 1rem;
   border-radius: var(--radius-sm);
-  background: var(--bg-card);
+  background: var(--bg-card-hover);
   border: 1px solid var(--border-color);
 
   &__name {
     flex: 1;
     font-weight: 600;
-    color: var(--text-main);
   }
 
   &__count {
@@ -725,39 +701,31 @@ const onResetQuiz = () => {
   }
 }
 
-/* Stacked Bookmarks */
-.stacked-bookmarks {
+.bookmark-cards-stack {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.5rem;
   margin: 1.5rem 0;
 }
 
 .bookmark-card {
   padding: 0.75rem 1.25rem;
   border-radius: var(--radius-sm);
-  background: var(--bg-card);
+  background: var(--bg-card-hover);
   border: 1px solid var(--border-color);
-  font-weight: 600;
-  color: var(--text-main);
+  font-weight: 700;
 
-  &--lvl1 { margin-left: 0; }
-  &--lvl2 { margin-left: 1rem; }
-  &--lvl3 { margin-left: 2rem; }
-  &--lvl4 { margin-left: 3rem; }
-  &--lvl5 {
-    margin-left: 4rem;
-    background: var(--primary-gradient);
-    color: var(--text-inverse);
-    border-color: transparent;
-  }
+  &--lvl1 { margin-left: 0px; }
+  &--lvl2 { margin-left: 15px; }
+  &--lvl3 { margin-left: 30px; }
+  &--lvl4 { margin-left: 45px; }
+  &--lvl5 { margin-left: 60px; color: var(--primary); border-color: var(--primary); }
 }
 
 .codex-topics-list {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  margin-top: 1.5rem;
 }
 
 .codex-topic-row {
@@ -766,47 +734,28 @@ const onResetQuiz = () => {
   align-items: center;
   padding: 0.85rem 1.25rem;
   border-radius: var(--radius-sm);
-  background: var(--bg-card);
+  background: var(--bg-card-hover);
   border: 1px solid var(--border-color);
+  font-weight: 600;
 
-  &--completed {
-    border-color: var(--success);
-    .codex-topic-row__badge { color: var(--success); }
-  }
-
-  &--active {
-    border-color: var(--primary);
-    font-weight: 700;
-    .codex-topic-row__badge { color: var(--primary); }
-  }
-
-  &__badge {
-    font-weight: 700;
-    font-size: 0.85rem;
-  }
+  &--completed { color: var(--success); }
+  &--active { border-color: var(--primary); font-weight: 800; }
 }
 
-/* Article Reader */
 .article-header {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.75rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid var(--border-color);
   margin-bottom: 1.5rem;
 }
 
 .article-breadcrumbs {
   font-size: 0.85rem;
   color: var(--text-muted);
+  margin: 0.5rem 0;
 }
 
 .article-title {
-  font-size: 2.25rem;
+  font-size: 2.2rem;
   font-weight: 800;
-  color: var(--text-main);
-  line-height: 1.2;
+  margin-bottom: 0.75rem;
 }
 
 .article-meta {
@@ -815,169 +764,136 @@ const onResetQuiz = () => {
   gap: 1rem;
   font-size: 0.85rem;
   color: var(--text-muted);
-  font-weight: 600;
 }
 
 .article-body {
-  font-size: 1.05rem;
-  line-height: 1.7;
-  color: var(--text-main);
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
-
-  p { margin: 0; }
+  line-height: 1.7;
+  font-size: 1.05rem;
 }
 
 .code-block {
-  margin: 1.5rem 0;
   border-radius: var(--radius-md);
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid var(--border-color);
+  background: #1e1e2e;
+  color: #cdd6f4;
   overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 
   &__header {
-    padding: 0.6rem 1rem;
+    padding: 0.5rem 1rem;
+    background: rgba(0, 0, 0, 0.3);
     font-size: 0.8rem;
     font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    background: var(--bg-card);
-    border-bottom: 1px solid var(--border-color);
-    color: var(--text-muted);
+    color: #a6adc8;
   }
 
   pre {
+    padding: 1rem;
     margin: 0;
-    padding: 1.25rem;
-    overflow-x: auto;
-    font-family: 'Fira Code', 'Courier New', monospace;
+    font-family: monospace;
     font-size: 0.9rem;
-  }
-
-  .code-num {
-    display: inline-block;
-    width: 25px;
-    opacity: 0.4;
-    user-select: none;
   }
 }
 
 .article-footer {
   display: flex;
   justify-content: space-between;
-  align-items: center;
   margin-top: 2rem;
   padding-top: 1.5rem;
   border-top: 1px solid var(--border-color);
 }
 
-/* Quiz Screen */
 .quiz-header {
+  text-align: center;
   margin-bottom: 1.5rem;
 }
 
 .quiz-title {
-  font-size: 1.75rem;
+  font-size: 1.6rem;
   font-weight: 800;
-  color: var(--text-main);
-  margin-top: 0.5rem;
+  margin: 0.5rem 0;
 }
 
 .quiz-meta {
-  font-size: 0.9rem;
   color: var(--text-muted);
+  font-size: 0.9rem;
 }
 
 .quiz-step-bar {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-
-  .quiz-step-num {
-    font-weight: 700;
-    font-size: 0.9rem;
-    color: var(--primary);
-  }
+  margin-bottom: 2rem;
 }
 
 .quiz-actions {
-  margin-top: 2rem;
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
+  margin-top: 1.5rem;
 }
 
 .quiz-flashcard-wrapper {
   margin-top: 3rem;
   padding-top: 2rem;
-  border-top: 1px dashed var(--border-color);
-
-  .quiz-flashcard-title {
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: var(--text-main);
-    margin-bottom: 1.25rem;
-  }
+  border-top: 1px solid var(--border-color);
 }
 
-/* Showcase Grid */
+.quiz-flashcard-title {
+  font-size: 1.2rem;
+  font-weight: 800;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.ui-kit-demo-result {
+  text-align: center;
+  margin-top: 1rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
 .ui-kit-section {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
+  &__header {
+    margin-bottom: 1.5rem;
+  }
 
   &__title {
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: var(--text-main);
+    font-size: 1.5rem;
+    font-weight: 800;
   }
 
   &__desc {
-    font-size: 0.95rem;
     color: var(--text-muted);
   }
 }
 
-.ui-kit-grid {
+.ui-kit-components-grid {
   display: flex;
   flex-direction: column;
-  gap: 1.75rem;
+  gap: 2.5rem;
 }
 
 .ui-kit-group {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1rem;
 
   h3 {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: var(--text-muted);
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-main);
   }
 }
 
 .ui-kit-row {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   gap: 1rem;
+  flex-wrap: wrap;
 }
 
-.ui-kit-cards-grid {
+.ui-kit-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1.5rem;
-}
-
-.ui-kit-demo-result {
-  margin-top: 1.5rem;
-  padding: 1rem;
-  border-radius: var(--radius-md);
-  background: rgba(16, 185, 129, 0.15);
-  border: 1px solid rgba(16, 185, 129, 0.4);
-  color: var(--success);
-  text-align: center;
-  font-weight: 600;
+  gap: 1rem;
 }
 </style>

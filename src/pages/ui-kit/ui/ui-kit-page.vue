@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useTheme, type AppTheme } from 'lern-ui-kit'
 import {
+  useTheme,
+  type AppTheme,
   UiButton,
   UiBadge,
   UiCard,
@@ -17,11 +18,11 @@ import {
   UiTable,
   UiCarousel,
   InteractiveFlashcard,
-  type QuestionData,
-  type QuestionOption,
-  type TabItem,
-  type DropdownOption,
-  type TableColumn,
+  TabItem,
+  QuestionData,
+  QuestionOption,
+  DropdownOption,
+  TableColumn,
 } from 'lern-ui-kit'
 
 // #region Theme Management
