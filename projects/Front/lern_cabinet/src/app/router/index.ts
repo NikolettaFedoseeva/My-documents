@@ -1,22 +1,11 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
-import { UiKitPage } from '@/pages'
-import { WorkspacePage } from '@/domains/app-workspace'
+import { CabinetPage } from '@/pages/cabinet'
 
 const routes: Array<RouteRecordRaw> = [
   {
     path: '/',
-    name: 'home',
-    component: WorkspacePage,
-  },
-  {
-    path: '/workspace',
-    name: 'workspace',
-    component: WorkspacePage,
-  },
-  {
-    path: '/ui-kit',
-    name: 'ui-kit',
-    component: UiKitPage,
+    name: 'cabinet',
+    component: CabinetPage,
   },
   {
     path: '/:pathMatch(.*)*',

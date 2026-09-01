@@ -1,12 +1,12 @@
 <script lang="ts" setup>
-import { onMounted } from 'vue'
-import { useTheme } from '@/shared/lib/theme'
+import { onMounted } from "vue";
+import { useTheme } from "lern-ui-kit";
 
-const { initTheme } = useTheme()
+const { initTheme } = useTheme();
 
 onMounted(() => {
-  initTheme()
-})
+  initTheme();
+});
 </script>
 
 <template>
@@ -20,7 +20,7 @@ onMounted(() => {
 </template>
 
 <style lang="scss">
-@use './styles/index.scss';
+@use "./styles/index.scss";
 
 #app {
   min-height: 100vh;
@@ -29,5 +29,3 @@ onMounted(() => {
   flex-grow: 1;
 }
 </style>
-
-

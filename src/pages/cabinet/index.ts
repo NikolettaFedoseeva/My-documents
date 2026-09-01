@@ -1,0 +1,1 @@
+export { default as CabinetPage } from './ui/cabinet-page.vue'

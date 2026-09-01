@@ -13,7 +13,7 @@ const password = ref('')
 const name = ref('')
 
 const onSubmit = () => {
-  alert('Успешный вход: ' + email.value)
+  alert('Авторизация выполнена: ' + email.value)
 }
 </script>
 

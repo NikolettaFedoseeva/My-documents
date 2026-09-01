@@ -1,2 +1,1 @@
-﻿export * from './landing'
-export * from './ui-kit'
+﻿export * from "./landing";

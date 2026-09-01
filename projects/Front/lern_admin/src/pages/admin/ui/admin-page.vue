@@ -70,7 +70,6 @@ const onAddTopic = () => {
         </UiTable>
       </div>
 
-      <!-- Add Modal -->
       <UiModal v-model="isAddModalOpen" title="Создание новой темы курса">
         <div class="modal-form">
           <UiInput v-model="newTopicTitle" label="Название темы" placeholder="Например: Pinia State Management" />

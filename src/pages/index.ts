@@ -1,4 +1,5 @@
 export * from './landing'
+export * from './cabinet'
 export * from './auth'
 export * from './admin'
 export * from './ui-kit'

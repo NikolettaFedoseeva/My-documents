@@ -1,1 +1,1 @@
-﻿export { default as AuthPage } from './ui/auth-page.vue'
+export { default as AuthPage } from './ui/auth-page.vue'

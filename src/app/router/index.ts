@@ -1,16 +1,19 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
 import { defineAsyncComponent } from 'vue'
-import { UiKitPage, LandingPage } from '@/pages'
+import {
+  LandingPage,
+  CabinetPage,
+  AuthPage,
+  AdminPage,
+  UiKitPage
+} from '@/pages'
 import { WorkspacePage } from '@/domains/app-workspace'
-import { AuthPage } from '@/pages/auth'
-import { AdminPage } from '@/pages/admin'
 
-// Smart Fallback Component Wrapper for Module Federation
 const loadRemoteWithFallback = (remoteImporter: () => Promise<any>, fallbackComponent: any) => {
   return defineAsyncComponent({
     loader: () =>
       remoteImporter().catch((err) => {
-        console.warn('[Module Federation] Remote microfrontend server unavailable. Using local fallback component.', err)
+        console.warn('[Module Federation] Remote server unavailable. Using fallback component.', err)
         return { default: fallbackComponent }
       }),
   })
@@ -28,6 +31,11 @@ const routes: Array<RouteRecordRaw> = [
     component: loadRemoteWithFallback(() => import('lern_landing/LandingPage'), LandingPage),
   },
   {
+    path: '/cabinet',
+    name: 'cabinet',
+    component: loadRemoteWithFallback(() => import('lern_cabinet/CabinetPage'), CabinetPage),
+  },
+  {
     path: '/auth',
     name: 'auth',
     component: loadRemoteWithFallback(() => import('lern_auth/AuthPage'), AuthPage),
@@ -35,7 +43,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/workspace',
     name: 'workspace',
-    component: loadRemoteWithFallback(() => import('lern_cabinet/CabinetPage'), WorkspacePage),
+    component: WorkspacePage,
   },
   {
     path: '/admin',

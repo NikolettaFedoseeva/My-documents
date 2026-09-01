@@ -1,6 +1,6 @@
-<script lang="ts" setup>
+<script setup lang="ts">
 import { onMounted } from 'vue'
-import { useTheme } from '@/shared/lib/theme'
+import { useTheme } from 'lern-ui-kit'
 
 const { initTheme } = useTheme()
 
@@ -10,13 +10,9 @@ onMounted(() => {
 </script>
 
 <template>
-  <RouterView #default="{ Component }">
-    <Suspense :timeout="0">
-      <template v-if="Component">
-        <component :is="Component" />
-      </template>
-    </Suspense>
-  </RouterView>
+  <div id="app">
+    <router-view />
+  </div>
 </template>
 
 <style lang="scss">
@@ -29,5 +25,3 @@ onMounted(() => {
   flex-grow: 1;
 }
 </style>
-
-

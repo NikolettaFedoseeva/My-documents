@@ -1,2 +1,1 @@
-﻿export * from './auth'
-export * from './ui-kit'
+export * from './auth'

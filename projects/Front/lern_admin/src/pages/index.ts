@@ -1,2 +1,1 @@
-﻿export * from './admin'
-export * from './ui-kit'
+export * from './admin'
