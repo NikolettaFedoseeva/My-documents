@@ -5,34 +5,22 @@ const remoteNames = [
   "lern_admin",
 ];
 
-/**
- * * Загрузка дочернего модуля с динамическим адресом
- */
 const getPromise = () => {
   new Promise((resolve) => {
-    // Название host приложения
     const localAppName = "LOCAL_APP_NAME";
-    // Название получаемого приложения
     const remoteName = "REMOTE_NAME";
-
-    // Название host приложения
     const mode = "APP_MODE";
 
-    // Ссылка на точку входа в получаемое приложение
     let remoteUrl;
 
-    // Установка название host приложения
     if (!window.appName) window.appName = localAppName;
     if (remoteName == window.appName) {
       remoteUrl = "/remoteEntry.js";
     }
 
-    // Инит скрипта
     const init = () => {
-      // Тег скрипта с ссылкой на remote приложение
       let script;
 
-      // Проверяем если ри уже скрипт с ссылкой src == remoteUrl
       const headChildren = document.head.children;
       for (let headChild of headChildren) {
         if (headChild.src == remoteUrl) {
@@ -40,14 +28,22 @@ const getPromise = () => {
           break;
         }
       }
-      // Если не нашли скрипт, то создаем
+
       if (!script) {
         script = document.createElement("script");
         script.src = remoteUrl;
+        
+        script.onerror = () => {
+          console.log('[Module Federation] Remote ' + remoteName + ' not active at ' + remoteUrl + '. Using fallback.');
+          resolve({
+            get: () => Promise.reject(new Error('Remote unavailable')),
+            init: () => {}
+          });
+        };
+        
         document.head.appendChild(script);
       }
 
-      // Прокси который необходимо вернуть, когда подключится скрипт
       const proxy = {
         get: (request) => {
           return window[remoteName].get(request);
@@ -67,7 +63,6 @@ const getPromise = () => {
         resolve(proxy);
       };
 
-      // Проверка сработал ли скрипт
       if (script.readyState === "complete") {
         resolveProxy();
       } else {
@@ -75,19 +70,14 @@ const getPromise = () => {
       }
     };
 
-    // Если имя текущего хост приложения совпадает с remote приложением
     if (remoteUrl) {
       init();
-    }
-    // Получение json с конфигурацией remotes
-    else {
+    } else {
       const initWithExternalRemoteUrl = () => {
         window.appWebSettings.then((res) => {
           const appWebSettingsRemotes = res[mode].remotes;
-          // Ссылка на получаемое приложение
           const url = appWebSettingsRemotes[remoteName];
-          // Ссылка на точку входа в получаемое приложение
-          remoteUrl = `${url}/remoteEntry.js`;
+          remoteUrl = url + '/remoteEntry.js';
           init();
         });
       };
@@ -96,14 +86,13 @@ const getPromise = () => {
       else {
         window.appWebSettings = fetch("/appWebSettings.json")
           .then(async (appWebSettingsData) => {
-            // Чтение текста json
             return await appWebSettingsData.text().then((appWebSettingsStr) => {
               const appWebSettings = JSON.parse(appWebSettingsStr);
               return appWebSettings;
             });
           })
           .catch(() => {
-            console.error("Добавьте appWebSettings.json файл в public папку");
+            console.warn("appWebSettings.json check");
           });
         initWithExternalRemoteUrl();
       }
@@ -111,22 +100,13 @@ const getPromise = () => {
   });
 };
 
-/**
- * * Возвращает значение remote путь в зависимости от NODE_ENV
- * @param name - название приложения
- * @param devPort - порт разработки приложения
- * @returns Возвращает строку с содержимым телом функции.
- */
 const getRemoteModule = (name, localAppName) => {
   return `promise ${getFuncBody(getPromise)
     .replace("REMOTE_NAME", name)
     .replace("LOCAL_APP_NAME", localAppName)
-    .replace("APP_MODE", process.env.NODE_ENV)}`;
+    .replace("APP_MODE", process.env.NODE_ENV || 'development')}`;
 };
 
-/**
- * * Получить функцию в формате строки
- */
 const getFuncBody = (func) => {
   let funcString = func.toString();
   funcString = funcString.substring(funcString.indexOf("{") + 1);
@@ -134,10 +114,6 @@ const getFuncBody = (func) => {
   return funcString.trim();
 };
 
-/**
- * * Получить remotes для конфигурации (Production)
- * @param names массив имен удаленных приложений
- */
 const getProductionRemoteModules = (names) => {
   return names.reduce((object, name) => {
     const remoteName = name.split("-").join("_");
@@ -148,22 +124,7 @@ const getProductionRemoteModules = (names) => {
   }, {});
 };
 
-const developmentAppWebSettings = require("./public/appWebSettings.json");
-/**
- * * Получить remotes для конфигурации (Development)
- * @param names массив имен удаленных приложений
- */
-const getDevelopmentRemoteModules = (names) => {
-  return names.reduce((object, name) => {
-    const remoteName = name.split("-").join("_");
-    return {
-      ...object,
-      [remoteName]: `${remoteName}@${developmentAppWebSettings.development.remotes[remoteName]}/remoteEntry.js`,
-    };
-  }, {});
-};
-
 module.exports = {
   production: getProductionRemoteModules(remoteNames),
-  development: getDevelopmentRemoteModules(remoteNames),
+  development: getProductionRemoteModules(remoteNames),
 };
