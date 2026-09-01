@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref } from "vue";
 import {
   useTheme,
   type AppTheme,
@@ -18,108 +18,138 @@ import {
   UiTable,
   UiCarousel,
   InteractiveFlashcard,
+} from "lern-ui-kit";
+
+import type {
   TabItem,
   QuestionData,
   QuestionOption,
   DropdownOption,
   TableColumn,
-} from 'lern-ui-kit'
+} from "lern-ui-kit";
 
 // #region Theme Management
-const { currentTheme, themes, setTheme } = useTheme()
+const { currentTheme, themes, setTheme } = useTheme();
 // #endregion Theme Management
 
 // #region Navigation Demo Tabs
-const activeTab = ref<'search' | 'nav' | 'article' | 'quiz'>('search')
+const activeTab = ref<"search" | "nav" | "article" | "quiz">("search");
 // #endregion Navigation Demo Tabs
 
 // #region Component States Demo
-const selectedDemoTab = ref<string>('vue3')
+const selectedDemoTab = ref<string>("vue3");
 const demoTabs: TabItem[] = [
-  { id: 'js', label: 'JavaScript', icon: '⚡', badge: '12' },
-  { id: 'vue3', label: 'Vue 3 API', icon: '🖖', badge: '24' },
-  { id: 'ts', label: 'TypeScript', icon: '📘', badge: '8' },
-  { id: 'react', label: 'React Core', icon: '⚛️', disabled: true },
-]
+  { id: "js", label: "JavaScript", icon: "⚡", badge: "12" },
+  { id: "vue3", label: "Vue 3 API", icon: "🖖", badge: "24" },
+  { id: "ts", label: "TypeScript", icon: "📘", badge: "8" },
+  { id: "react", label: "React Core", icon: "⚛️", disabled: true },
+];
 
-const toggleFocusMode = ref<boolean>(true)
-const toggleAutoCheck = ref<boolean>(false)
+const toggleFocusMode = ref<boolean>(true);
+const toggleAutoCheck = ref<boolean>(false);
 
-const selectedCategory = ref<string>('frontend')
+const selectedCategory = ref<string>("frontend");
 const categoryOptions: DropdownOption[] = [
-  { id: 'frontend', label: 'Frontend Разработка', icon: '💻' },
-  { id: 'backend', label: 'Backend & Базы Данных', icon: '⚙️' },
-  { id: 'design', label: 'UI/UX Дизайн & Figma', icon: '🎨' },
-  { id: 'devops', label: 'DevOps & CI/CD', icon: '🚀', disabled: true },
-]
+  { id: "frontend", label: "Frontend Разработка", icon: "💻" },
+  { id: "backend", label: "Backend & Базы Данных", icon: "⚙️" },
+  { id: "design", label: "UI/UX Дизайн & Figma", icon: "🎨" },
+  { id: "devops", label: "DevOps & CI/CD", icon: "🚀", disabled: true },
+];
 
-const isModalOpen = ref<boolean>(false)
+const isModalOpen = ref<boolean>(false);
 
 // Table Demo
 const tableColumns: TableColumn[] = [
-  { key: 'topic', label: 'Тема курса', sortable: true },
-  { key: 'category', label: 'Дисциплина' },
-  { key: 'progress', label: 'Прогресс', sortable: true },
-  { key: 'status', label: 'Статус' },
-]
+  { key: "topic", label: "Тема курса", sortable: true },
+  { key: "category", label: "Дисциплина" },
+  { key: "progress", label: "Прогресс", sortable: true },
+  { key: "status", label: "Статус" },
+];
 
 const tableData = [
-  { topic: 'watch и watchEffect', category: 'Vue 3', progress: '62%', status: 'В процессе' },
-  { topic: 'Компоненты & Props', category: 'Vue 3', progress: '100%', status: 'Завершено' },
-  { topic: 'Строгая типизация', category: 'TypeScript', progress: '85%', status: 'В процессе' },
-  { topic: 'Pinia & State', category: 'Vue 3', progress: '0%', status: 'Не начато' },
-]
+  {
+    topic: "watch и watchEffect",
+    category: "Vue 3",
+    progress: "62%",
+    status: "В процессе",
+  },
+  {
+    topic: "Компоненты & Props",
+    category: "Vue 3",
+    progress: "100%",
+    status: "Завершено",
+  },
+  {
+    topic: "Строгая типизация",
+    category: "TypeScript",
+    progress: "85%",
+    status: "В процессе",
+  },
+  {
+    topic: "Pinia & State",
+    category: "Vue 3",
+    progress: "0%",
+    status: "Не начато",
+  },
+];
 // #endregion Component States Demo
 
 // #region Active Recall & Quiz Demo
 const demoQuestion: QuestionData = {
-  id: 'q-101',
-  title: 'Механизмы реактивности Vue 3',
-  category: 'Frontend',
-  section: 'Vue 3 & Reactivity',
-  difficulty: 'medium',
-  question: 'В чём главное различие между ref() и reactive() в Vue 3 Composition API?',
+  id: "q-101",
+  title: "Механизмы реактивности Vue 3",
+  category: "Frontend",
+  section: "Vue 3 & Reactivity",
+  difficulty: "medium",
+  question:
+    "В чём главное различие между ref() и reactive() в Vue 3 Composition API?",
   answer:
-    'ref() оборачивает любой тип данных (примитивы и объекты) в объект с полем .value и отслеживает изменения через get/set прокси.\n\nreactive() работает ТОЛЬКО с объектами/массивами и создает глубокую прокси-обертку самого объекта без необходимости использовать .value.',
-  hint: 'Вспомните, как работают примитивные типы данных (number, string, boolean) и свойства .value.',
-}
+    "ref() оборачивает любой тип данных (примитивы и объекты) в объект с полем .value и отслеживает изменения через get/set прокси.\n\nreactive() работает ТОЛЬКО с объектами/массивами и создает глубокую прокси-обертку самого объекта без необходимости использовать .value.",
+  hint: "Вспомните, как работают примитивные типы данных (number, string, boolean) и свойства .value.",
+};
 
 const quizOptions: QuestionOption[] = [
   {
-    id: 'opt-a',
-    label: 'A',
-    text: 'Когда нужно отследить изменения конкретного источника и получить старое и новое значения.',
+    id: "opt-a",
+    label: "A",
+    text: "Когда нужно отследить изменения конкретного источника и получить старое и новое значения.",
   },
   {
-    id: 'opt-b',
-    label: 'B',
-    text: 'Когда зависимости заранее неизвестны, или их использование внутри колбэка может меняться.',
+    id: "opt-b",
+    label: "B",
+    text: "Когда зависимости заранее неизвестны, или их использование внутри колбэка может меняться.",
   },
   {
-    id: 'opt-c',
-    label: 'C',
-    text: 'Когда нужно отслеживать только несколько фиксированных полей объекта.',
+    id: "opt-c",
+    label: "C",
+    text: "Когда нужно отслеживать только несколько фиксированных полей объекта.",
   },
-]
+];
 
-const selectedQuizOption = ref<string | null>(null)
-const isQuizSubmitted = ref<boolean>(false)
-const sampleRatingResult = ref<string | null>(null)
+const selectedQuizOption = ref<string | null>(null);
+const isQuizSubmitted = ref<boolean>(false);
+const sampleRatingResult = ref<string | null>(null);
 
 const onRateQuestion = (payload: { id: string | number; rating: string }) => {
-  sampleRatingResult.value = 'Вы оценили вопрос как: ' + (payload.rating === 'know' ? 'Знаю 🟢' : payload.rating === 'doubt' ? 'Сомневаюсь 🟡' : 'Повторить 🔴')
-}
+  sampleRatingResult.value =
+    "Вы оценили вопрос как: " +
+    (payload.rating === "know"
+      ? "Знаю 🟢"
+      : payload.rating === "doubt"
+      ? "Сомневаюсь 🟡"
+      : "Повторить 🔴");
+};
 
 const onSubmitQuiz = () => {
   if (selectedQuizOption.value) {
-    isQuizSubmitted.value = true
+    isQuizSubmitted.value = true;
   }
-}
+};
 
 const onResetQuiz = () => {
-  selectedQuizOption.value = null
-  isQuizSubmitted.value = false
-}
+  selectedQuizOption.value = null;
+  isQuizSubmitted.value = false;
+};
 // #endregion Active Recall & Quiz Demo
 </script>
 
@@ -128,14 +158,19 @@ const onResetQuiz = () => {
     <!-- Header with Theme Selector -->
     <header class="ui-kit-header">
       <div class="ui-kit-header__title-group">
-        <h1 class="ui-kit-header__title">📖 Справочник & Карта Знаний (Bookish Codex)</h1>
+        <h1 class="ui-kit-header__title">
+          📖 Справочник & Карта Знаний (Bookish Codex)
+        </h1>
         <p class="ui-kit-header__subtitle">
-          Интерактивная демонстрация 4 разделов платформы и 7 динамических стилей
+          Интерактивная демонстрация 4 разделов платформы и 7 динамических
+          стилей
         </p>
       </div>
 
       <div class="ui-kit-theme-switcher">
-        <label class="ui-kit-theme-switcher__label">Выбор визуального стиля:</label>
+        <label class="ui-kit-theme-switcher__label"
+          >Выбор визуального стиля:</label
+        >
         <div class="ui-kit-theme-switcher__options">
           <button
             v-for="theme in themes"
@@ -215,7 +250,12 @@ const onResetQuiz = () => {
             <div class="codex-continue-card">
               <div class="codex-continue-card__badge">Продолжить:</div>
               <h4 class="codex-continue-card__title">watch и watchEffect</h4>
-              <UiProgressBar :value="62" label="Прогресс прочтения" show-label animated />
+              <UiProgressBar
+                :value="62"
+                label="Прогресс прочтения"
+                show-label
+                animated
+              />
             </div>
 
             <div class="codex-categories-list">
@@ -248,11 +288,17 @@ const onResetQuiz = () => {
           </div>
 
           <div class="bookmark-cards-stack">
-            <div class="bookmark-card bookmark-card--lvl1">01 Программирование</div>
+            <div class="bookmark-card bookmark-card--lvl1">
+              01 Программирование
+            </div>
             <div class="bookmark-card bookmark-card--lvl2">02 Frontend</div>
             <div class="bookmark-card bookmark-card--lvl3">03 Vue 3</div>
-            <div class="bookmark-card bookmark-card--lvl4">04 Composition API</div>
-            <div class="bookmark-card bookmark-card--lvl5">05 watch и watchEffect</div>
+            <div class="bookmark-card bookmark-card--lvl4">
+              04 Composition API
+            </div>
+            <div class="bookmark-card bookmark-card--lvl5">
+              05 watch и watchEffect
+            </div>
           </div>
 
           <div class="codex-topics-list">
@@ -282,7 +328,8 @@ const onResetQuiz = () => {
           <div class="article-header">
             <UiBadge variant="secondary">ГЛАВА 05</UiBadge>
             <div class="article-breadcrumbs">
-              Программирование &gt; Frontend &gt; Vue 3 &gt; Composition API &gt; watch и watchEffect
+              Программирование &gt; Frontend &gt; Vue 3 &gt; Composition API
+              &gt; watch и watchEffect
             </div>
             <h1 class="article-title">watch и watchEffect</h1>
             <div class="article-meta">
@@ -294,16 +341,20 @@ const onResetQuiz = () => {
 
           <div class="article-body">
             <p>
-              В Composition API для реакции на изменения реактивных данных используются функции
+              В Composition API для реакции на изменения реактивных данных
+              используются функции
               <strong>watch</strong> и <strong>watchEffect</strong>.
             </p>
 
             <p>
-              <strong>watch</strong> позволяет явно указать источник изменений и получить старое и новое значения.
+              <strong>watch</strong> позволяет явно указать источник изменений и
+              получить старое и новое значения.
             </p>
 
             <p>
-              <strong>watchEffect</strong> автоматически отслеживает используемые реактивные зависимости внутри колбэка и запускается сразу, а затем — при любом их изменении.
+              <strong>watchEffect</strong> автоматически отслеживает
+              используемые реактивные зависимости внутри колбэка и запускается
+              сразу, а затем — при любом их изменении.
             </p>
 
             <div class="code-block">
@@ -354,18 +405,15 @@ const onResetQuiz = () => {
             >
               Проверить ответ
             </UiButton>
-            <UiButton
-              v-else
-              variant="secondary"
-              size="lg"
-              @click="onResetQuiz"
-            >
+            <UiButton v-else variant="secondary" size="lg" @click="onResetQuiz">
               Сбросить и попробовать снова
             </UiButton>
           </div>
 
           <div class="quiz-flashcard-wrapper">
-            <h3 class="quiz-flashcard-title">🃏 Тренaжёр Active Recall (3D Flip)</h3>
+            <h3 class="quiz-flashcard-title">
+              🃏 Тренaжёр Active Recall (3D Flip)
+            </h3>
             <InteractiveFlashcard :data="demoQuestion" @rate="onRateQuestion" />
             <div v-if="sampleRatingResult" class="ui-kit-demo-result">
               {{ sampleRatingResult }}
@@ -377,8 +425,12 @@ const onResetQuiz = () => {
       <!-- GENERAL UI KIT COMPONENTS SHOWCASE -->
       <section class="ui-kit-section">
         <div class="ui-kit-section__header">
-          <h2 class="ui-kit-section__title">🧩 Набор базовых элементов (UI Kit Components)</h2>
-          <p class="ui-kit-section__desc">Полная коллекция FSD-компонентов интерфейса</p>
+          <h2 class="ui-kit-section__title">
+            🧩 Набор базовых элементов (UI Kit Components)
+          </h2>
+          <p class="ui-kit-section__desc">
+            Полная коллекция FSD-компонентов интерфейса
+          </p>
         </div>
 
         <UiCard variant="glass">
@@ -402,13 +454,15 @@ const onResetQuiz = () => {
               <h3>Системные Уведомления (UiAlert)</h3>
               <div class="ui-kit-grid">
                 <UiAlert variant="info" title="Информационный совет" closable>
-                  В режиме Focus Mode все отвлекающие элементы управления автоматически скрываются.
+                  В режиме Focus Mode все отвлекающие элементы управления
+                  автоматически скрываются.
                 </UiAlert>
                 <UiAlert variant="success" title="Успешная самопроверка">
                   Вы ответили верно на 10 из 10 вопросов в теме watchEffect!
                 </UiAlert>
                 <UiAlert variant="warning" title="Внимание">
-                  Ударный режим (Streak) сбросится, если не пройти 1 урок сегодня.
+                  Ударный режим (Streak) сбросится, если не пройти 1 урок
+                  сегодня.
                 </UiAlert>
               </div>
             </div>
@@ -416,24 +470,50 @@ const onResetQuiz = () => {
             <div class="ui-kit-group">
               <h3>Индикаторы Прогресса (UiProgressBar)</h3>
               <div class="ui-kit-grid">
-                <UiProgressBar :value="85" variant="primary" label="Освоение темы Vue 3" show-label animated />
-                <UiProgressBar :value="100" variant="success" label="Выполнено 10 из 10 вопросов" show-label />
-                <UiProgressBar :value="40" variant="warning" label="Текущий уровень памяти" show-label />
+                <UiProgressBar
+                  :value="85"
+                  variant="primary"
+                  label="Освоение темы Vue 3"
+                  show-label
+                  animated
+                />
+                <UiProgressBar
+                  :value="100"
+                  variant="success"
+                  label="Выполнено 10 из 10 вопросов"
+                  show-label
+                />
+                <UiProgressBar
+                  :value="40"
+                  variant="warning"
+                  label="Текущий уровень памяти"
+                  show-label
+                />
               </div>
             </div>
 
             <div class="ui-kit-group">
               <h3>Тумблеры-Переключатели (UiToggle)</h3>
               <div class="ui-kit-row">
-                <UiToggle v-model="toggleFocusMode" label="Focus Mode (Режим концентрации)" />
-                <UiToggle v-model="toggleAutoCheck" label="Автопроверка ответов" />
+                <UiToggle
+                  v-model="toggleFocusMode"
+                  label="Focus Mode (Режим концентрации)"
+                />
+                <UiToggle
+                  v-model="toggleAutoCheck"
+                  label="Автопроверка ответов"
+                />
               </div>
             </div>
 
             <div class="ui-kit-group">
               <h3>Выпадающий список (UiDropdown)</h3>
               <div style="max-width: 320px">
-                <UiDropdown v-model="selectedCategory" label="Выбор дисциплины" :options="categoryOptions" />
+                <UiDropdown
+                  v-model="selectedCategory"
+                  label="Выбор дисциплины"
+                  :options="categoryOptions"
+                />
               </div>
             </div>
 
@@ -441,7 +521,15 @@ const onResetQuiz = () => {
               <h3>Таблица Данных (UiTable)</h3>
               <UiTable :columns="tableColumns" :data="tableData">
                 <template #cell-status="{ value }">
-                  <UiBadge :variant="value === 'Завершено' ? 'success' : value === 'В процессе' ? 'warning' : 'secondary'">
+                  <UiBadge
+                    :variant="
+                      value === 'Завершено'
+                        ? 'success'
+                        : value === 'В процессе'
+                        ? 'warning'
+                        : 'secondary'
+                    "
+                  >
                     {{ value }}
                   </UiBadge>
                 </template>
@@ -451,17 +539,50 @@ const onResetQuiz = () => {
             <div class="ui-kit-group">
               <h3>Карусель / Слайдер (UiCarousel)</h3>
               <UiCarousel :items-count="3">
-                <div style="padding: 1.5rem; background: var(--bg-card-hover); border-radius: var(--radius-md); text-align: center; width: 100%;">
+                <div
+                  style="
+                    padding: 1.5rem;
+                    background: var(--bg-card-hover);
+                    border-radius: var(--radius-md);
+                    text-align: center;
+                    width: 100%;
+                  "
+                >
                   <h4>🚀 Слайд 1: Модуль Vue 3 Composition API</h4>
-                  <p>Освойте паттерны ref, reactive, computed и watch в интерактивном формате.</p>
+                  <p>
+                    Освойте паттерны ref, reactive, computed и watch в
+                    интерактивном формате.
+                  </p>
                 </div>
-                <div style="padding: 1.5rem; background: var(--bg-card-hover); border-radius: var(--radius-md); text-align: center; width: 100%;">
+                <div
+                  style="
+                    padding: 1.5rem;
+                    background: var(--bg-card-hover);
+                    border-radius: var(--radius-md);
+                    text-align: center;
+                    width: 100%;
+                  "
+                >
                   <h4>🎯 Слайд 2: Механики Active Recall</h4>
-                  <p>Проверяйте память с 3D-флешкартами и интервальным повторением.</p>
+                  <p>
+                    Проверяйте память с 3D-флешкартами и интервальным
+                    повторением.
+                  </p>
                 </div>
-                <div style="padding: 1.5rem; background: var(--bg-card-hover); border-radius: var(--radius-md); text-align: center; width: 100%;">
+                <div
+                  style="
+                    padding: 1.5rem;
+                    background: var(--bg-card-hover);
+                    border-radius: var(--radius-md);
+                    text-align: center;
+                    width: 100%;
+                  "
+                >
                   <h4>🏆 Слайд 3: Система Достижений и Streaks</h4>
-                  <p>Сохраняйте ежедневный прогресс и поднимайтесь на уровни кодекса!</p>
+                  <p>
+                    Сохраняйте ежедневный прогресс и поднимайтесь на уровни
+                    кодекса!
+                  </p>
                 </div>
               </UiCarousel>
             </div>
@@ -476,11 +597,18 @@ const onResetQuiz = () => {
 
                 <UiModal v-model="isModalOpen" title="Подсказка к заданию">
                   <p>
-                    Функция <code>watchEffect</code> выполняет переданный колбэк <strong>немедленно</strong> при вызове, автоматически отслеживая все реактивные переменные, используемые внутри него.
+                    Функция <code>watchEffect</code> выполняет переданный колбэк
+                    <strong>немедленно</strong> при вызове, автоматически
+                    отслеживая все реактивные переменные, используемые внутри
+                    него.
                   </p>
                   <template #footer>
-                    <UiButton variant="secondary" @click="isModalOpen = false">Закрыть</UiButton>
-                    <UiButton variant="primary" @click="isModalOpen = false">Понятно!</UiButton>
+                    <UiButton variant="secondary" @click="isModalOpen = false"
+                      >Закрыть</UiButton
+                    >
+                    <UiButton variant="primary" @click="isModalOpen = false"
+                      >Понятно!</UiButton
+                    >
                   </template>
                 </UiModal>
               </div>
@@ -715,11 +843,23 @@ const onResetQuiz = () => {
   border: 1px solid var(--border-color);
   font-weight: 700;
 
-  &--lvl1 { margin-left: 0px; }
-  &--lvl2 { margin-left: 15px; }
-  &--lvl3 { margin-left: 30px; }
-  &--lvl4 { margin-left: 45px; }
-  &--lvl5 { margin-left: 60px; color: var(--primary); border-color: var(--primary); }
+  &--lvl1 {
+    margin-left: 0px;
+  }
+  &--lvl2 {
+    margin-left: 15px;
+  }
+  &--lvl3 {
+    margin-left: 30px;
+  }
+  &--lvl4 {
+    margin-left: 45px;
+  }
+  &--lvl5 {
+    margin-left: 60px;
+    color: var(--primary);
+    border-color: var(--primary);
+  }
 }
 
 .codex-topics-list {
@@ -738,8 +878,13 @@ const onResetQuiz = () => {
   border: 1px solid var(--border-color);
   font-weight: 600;
 
-  &--completed { color: var(--success); }
-  &--active { border-color: var(--primary); font-weight: 800; }
+  &--completed {
+    color: var(--success);
+  }
+  &--active {
+    border-color: var(--primary);
+    font-weight: 800;
+  }
 }
 
 .article-header {
