@@ -1,87 +1,93 @@
-﻿<script lang="ts" setup>
-import { onMounted } from 'vue'
-import { useTheme, type AppTheme } from 'lern-ui-kit'
+<script setup lang="ts">
+import { ref, computed } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { useTheme, type AppTheme, UiDropdown, type DropdownOption } from 'lern-ui-kit'
 
-const { currentTheme, themes, setTheme, initTheme } = useTheme()
+const router = useRouter()
+const route = useRoute()
+const { currentTheme, themes, setTheme } = useTheme()
 
-onMounted(() => {
-  initTheme()
+const themeOptions: DropdownOption[] = themes.map((t) => ({
+  id: t.id,
+  label: t.icon + ' ' + t.name,
+}))
+
+const selectedTheme = computed({
+  get: () => currentTheme.value,
+  set: (val: string) => setTheme(val as AppTheme),
 })
+
+const navigateTo = (path: string) => {
+  router.push(path)
+}
 </script>
 
 <template>
   <div id="shell-layout">
-    <!-- Global Shell Navigation Header -->
+    <!-- Clean Top Header Nav -->
     <header class="shell-header">
-      <div class="shell-header__container">
-        <!-- Logo -->
-        <router-link to="/workspace" class="shell-logo">
-          <span class="shell-logo__icon">📖</span>
-          <span class="shell-logo__text">Lern Codex Shell</span>
-        </router-link>
+      <div class="shell-header__brand" @click="navigateTo('/')">
+        <span class="shell-header__logo">📖</span>
+        <span class="shell-header__title">Lern Codex</span>
+      </div>
 
-        <!-- Microfrontend Micro-Navigation Links -->
-        <nav class="shell-nav">
-          <router-link to="/landing" class="shell-nav__link" active-class="shell-nav__link--active">
-            <span>🌐 Промо</span>
-          </router-link>
-          <router-link to="/workspace" class="shell-nav__link" active-class="shell-nav__link--active">
-            <span>📚 Кабинет</span>
-          </router-link>
-          <router-link to="/admin" class="shell-nav__link" active-class="shell-nav__link--active">
-            <span>🛠 Админка</span>
-          </router-link>
-          <router-link to="/auth" class="shell-nav__link" active-class="shell-nav__link--active">
-            <span>🔐 Вход</span>
-          </router-link>
-          <router-link to="/ui-kit" class="shell-nav__link" active-class="shell-nav__link--active">
-            <span>🎨 UI Kit</span>
-          </router-link>
-        </nav>
+      <nav class="shell-header__nav">
+        <button
+          class="nav-item"
+          :class="{ 'nav-item--active': route.path === '/' }"
+          @click="navigateTo('/')"
+        >
+          Главная
+        </button>
 
-        <!-- Dynamic Theme Selector -->
-        <div class="shell-theme-selector">
-          <button
-            v-for="theme in themes"
-            :key="theme.id"
-            class="shell-theme-btn"
-            :class="{ 'shell-theme-btn--active': currentTheme === theme.id }"
-            :title="theme.name"
-            @click="setTheme(theme.id as AppTheme)"
-          >
-            {{ theme.icon }}
-          </button>
-        </div>
+        <button
+          class="nav-item"
+          :class="{ 'nav-item--active': route.path === '/docs' }"
+          @click="navigateTo('/docs')"
+        >
+          📖 Документация
+        </button>
+
+        <button
+          class="nav-item nav-item--highlight"
+          :class="{ 'nav-item--active': route.path === '/auth' || route.path === '/cabinet' }"
+          @click="navigateTo('/auth')"
+        >
+          🔑 Войти в Кабинет
+        </button>
+      </nav>
+
+      <!-- Theme Switcher via Dropdown -->
+      <div class="shell-header__theme-switcher">
+        <UiDropdown
+          v-model="selectedTheme"
+          :options="themeOptions"
+          placeholder="Выбор темы"
+        />
       </div>
     </header>
 
-    <!-- Main Viewport for Microfrontends -->
+    <!-- Main Viewport -->
     <main class="shell-content">
-      <RouterView #default="{ Component }">
-        <Suspense :timeout="0">
-          <template v-if="Component">
+      <router-view v-slot="{ Component }">
+        <suspense>
+          <template #default>
             <component :is="Component" />
           </template>
           <template #fallback>
-            <div class="shell-loading">
-              <div class="shell-loading__spinner"></div>
-              <span>Загрузка микрофронтенда...</span>
+            <div class="shell-loader">
+              <div class="spinner"></div>
+              <span>Загрузка страницы...</span>
             </div>
           </template>
-        </Suspense>
-      </RouterView>
+        </suspense>
+      </router-view>
     </main>
   </div>
 </template>
 
 <style lang="scss">
 @use './styles/index.scss';
-
-#app {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
 
 #shell-layout {
   min-height: 100vh;
@@ -92,92 +98,83 @@ onMounted(() => {
 }
 
 .shell-header {
-  position: sticky;
-  top: 0;
-  z-index: 500;
-  background: var(--bg-card);
-  border-bottom: 1px solid var(--border-color);
-  backdrop-filter: var(--card-blur);
-  padding: 0.75rem 1.5rem;
-
-  &__container {
-    max-width: 1200px;
-    margin: 0 auto;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-  }
-}
-
-.shell-logo {
+  height: 64px;
+  padding: 0 2rem;
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  text-decoration: none;
+  justify-content: space-between;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border-color);
+  backdrop-filter: blur(12px);
+  position: sticky;
+  top: 0;
+  z-index: 100;
 
-  &__icon {
+  &__brand {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    cursor: pointer;
+    user-select: none;
+
+    &:hover .shell-header__title {
+      color: var(--primary);
+    }
+  }
+
+  &__logo {
     font-size: 1.5rem;
   }
 
-  &__text {
-    font-size: 1.15rem;
+  &__title {
+    font-size: 1.2rem;
     font-weight: 800;
-    color: var(--text-main);
     letter-spacing: -0.01em;
+    transition: color 0.2s ease;
   }
-}
 
-.shell-nav {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-
-  &__link {
-    display: inline-flex;
+  &__nav {
+    display: flex;
     align-items: center;
-    padding: 0.55rem 0.95rem;
-    border-radius: var(--radius-sm);
-    color: var(--text-muted);
-    font-weight: 700;
-    font-size: 0.88rem;
-    text-decoration: none;
-    transition: all 0.2s ease;
+    gap: 0.5rem;
+  }
 
-    &:hover {
-      color: var(--text-main);
-      background: var(--bg-card-hover);
-    }
-
-    &--active {
-      background: var(--primary-gradient);
-      color: var(--text-inverse);
-      box-shadow: var(--shadow-glow);
-    }
+  &__theme-switcher {
+    width: 200px;
   }
 }
 
-.shell-theme-selector {
-  display: flex;
-  gap: 0.35rem;
-}
-
-.shell-theme-btn {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
+.nav-item {
+  padding: 0.5rem 1rem;
   border-radius: var(--radius-sm);
-  padding: 0.4rem 0.65rem;
-  cursor: pointer;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  font-weight: 600;
   font-size: 0.9rem;
+  cursor: pointer;
   transition: all 0.2s ease;
 
   &:hover {
+    color: var(--text-main);
     background: var(--bg-card-hover);
   }
 
   &--active {
+    color: var(--primary);
+    background: var(--bg-card-hover);
+    border-color: var(--border-color);
+  }
+
+  &--highlight {
     background: var(--primary-gradient);
+    color: #fff !important;
     border-color: transparent;
+    box-shadow: var(--shadow-glow);
+
+    &:hover {
+      opacity: 0.95;
+    }
   }
 }
 
@@ -185,27 +182,28 @@ onMounted(() => {
   flex: 1;
 }
 
-.shell-loading {
+.shell-loader {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  padding: 5rem 1rem;
   gap: 1rem;
-  min-height: 50vh;
   color: var(--text-muted);
-  font-weight: 600;
+}
 
-  &__spinner {
-    width: 36px;
-    height: 36px;
-    border: 3px solid var(--border-color);
-    border-top-color: var(--primary);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-  }
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--border-color);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>

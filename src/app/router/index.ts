@@ -12,7 +12,6 @@ const loadRemoteWithFallback = (remoteImporter: () => Promise<any>, fallbackComp
     loader: async () => {
       try {
         const mod = await remoteImporter()
-        // If module has default export or named export
         if (mod && mod.default) {
           return mod.default.default ? mod.default.default : mod.default
         }
@@ -28,18 +27,13 @@ const loadRemoteWithFallback = (remoteImporter: () => Promise<any>, fallbackComp
 const routes: Array<RouteRecordRaw> = [
   {
     path: '/',
-    name: 'home',
-    component: WorkspacePage,
-  },
-  {
-    path: '/landing',
     name: 'landing',
     component: loadRemoteWithFallback(() => import('lern_landing/LandingPage'), LandingPage),
   },
   {
-    path: '/cabinet',
-    name: 'cabinet',
-    component: loadRemoteWithFallback(() => import('lern_cabinet/CabinetPage'), CabinetPage),
+    path: '/docs',
+    name: 'docs',
+    component: WorkspacePage,
   },
   {
     path: '/auth',
@@ -47,9 +41,9 @@ const routes: Array<RouteRecordRaw> = [
     component: loadRemoteWithFallback(() => import('lern_auth/AuthPage'), AuthPage),
   },
   {
-    path: '/workspace',
-    name: 'workspace',
-    component: WorkspacePage,
+    path: '/cabinet',
+    name: 'cabinet',
+    component: loadRemoteWithFallback(() => import('lern_cabinet/CabinetPage'), CabinetPage),
   },
   {
     path: '/admin',

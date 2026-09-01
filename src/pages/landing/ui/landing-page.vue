@@ -21,8 +21,12 @@ const demoQuestion: QuestionData = {
   hint: 'Кликните на карточку, чтобы узнать ответ!',
 }
 
-const goToWorkspace = () => {
-  router.push('/workspace')
+const goToDocs = () => {
+  router.push('/docs')
+}
+
+const goToAuth = () => {
+  router.push('/auth')
 }
 </script>
 
@@ -41,9 +45,13 @@ const goToWorkspace = () => {
       </p>
 
       <div class="landing-hero__actions">
-        <UiButton variant="primary" size="lg" @click="goToWorkspace">
+        <UiButton variant="primary" size="lg" @click="goToDocs">
           <template #icon-left>📖</template>
           Открыть Базу Знаний →
+        </UiButton>
+        <UiButton variant="secondary" size="lg" @click="goToAuth">
+          <template #icon-left>🔑</template>
+          Войти в Кабинет
         </UiButton>
       </div>
     </section>
@@ -56,7 +64,7 @@ const goToWorkspace = () => {
             <span class="feature-item__icon">📚</span>
             <h3>Открытая Документация</h3>
             <p>
-              Все статьи, справочники и исходные примеры кода доступны абсолютно бесплатно и без обязательной регистрации.
+              Все статьи, справочники и исходные примеры кода доступны абсолютно бесплатно и без обязательной регистрации на роуте <code>/docs</code>.
             </p>
           </div>
         </UiCard>
@@ -76,7 +84,7 @@ const goToWorkspace = () => {
             <span class="feature-item__icon">🎨</span>
             <h3>7 Динамических Темы</h3>
             <p>
-              Комфортное чтение в любое время суток благодаря гибкой настройке оформления и UI Kit компонентам.
+              Комфортное чтение в любое время суток благодаря выпадающему переключателю оформления в шапке.
             </p>
           </div>
         </UiCard>
@@ -136,6 +144,8 @@ const goToWorkspace = () => {
   }
 
   &__actions {
+    display: flex;
+    gap: 1rem;
     margin-top: 0.75rem;
   }
 }
