@@ -1,0 +1,5 @@
+declare module 'lern-ui-kit'
+declare module 'lern_landing/LandingPage'
+declare module 'lern_auth/AuthPage'
+declare module 'lern_cabinet/CabinetPage'
+declare module 'lern_admin/AdminPage'

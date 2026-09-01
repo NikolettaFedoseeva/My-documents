@@ -1,0 +1,18 @@
+{
+  "production": {
+    "remotes": {
+      "lern_landing": "https://landing.lern.app",
+      "lern_auth": "https://auth.lern.app",
+      "lern_cabinet": "https://cabinet.lern.app",
+      "lern_admin": "https://admin.lern.app"
+    }
+  },
+  "development": {
+    "remotes": {
+      "lern_landing": "http://localhost:2061",
+      "lern_auth": "http://localhost:2062",
+      "lern_cabinet": "http://localhost:2063",
+      "lern_admin": "http://localhost:2064"
+    }
+  }
+}

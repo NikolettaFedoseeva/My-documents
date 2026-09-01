@@ -1,0 +1,58 @@
+{
+  "compilerOptions": {
+    "outDir": ".exposes-types/learning_platform/dts",
+    "target": "esnext",
+    "module": "esnext",
+    "strict": true,
+    "jsx": "preserve",
+    "moduleResolution": "node",
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "useDefineForClassFields": true,
+    "strictPropertyInitialization": false,
+    "strictNullChecks": false,
+    "noImplicitAny": false,
+    "sourceMap": true,
+    "baseUrl": ".",
+    "types": [
+      "webpack-env"
+    ],
+    "paths": {
+      "@/*": [
+        "src/*"
+      ],
+      "lern-ui-kit": [
+        "node_modules/lern-ui-kit/src/index.ts",
+        "../lern_ui_kit/src/index.ts"
+      ],
+      "lern-ui-kit/*": [
+        "node_modules/lern-ui-kit/src/*",
+        "../lern_ui_kit/src/*"
+      ],
+      "*": [
+        "*",
+        ".remotes-types/*"
+      ]
+    },
+    "lib": [
+      "esnext",
+      "dom",
+      "dom.iterable",
+      "scripthost"
+    ]
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/**/*.vue",
+    "src/**/*.png",
+    "src/**/*.svg"
+  ],
+  "exclude": [
+    "node_modules",
+    ".remotes-types",
+    ".exposes-types"
+  ]
+}
