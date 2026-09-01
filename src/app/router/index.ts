@@ -1,21 +1,27 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
 import { defineAsyncComponent } from 'vue'
-import {
-  LandingPage,
-  CabinetPage,
-  AuthPage,
-  AdminPage,
-  UiKitPage
-} from '@/pages'
+import LandingPage from '@/pages/landing'
+import CabinetPage from '@/pages/cabinet'
+import AuthPage from '@/pages/auth'
+import AdminPage from '@/pages/admin'
+import { UiKitPage } from '@/pages/ui-kit'
 import { WorkspacePage } from '@/domains/app-workspace'
 
 const loadRemoteWithFallback = (remoteImporter: () => Promise<any>, fallbackComponent: any) => {
   return defineAsyncComponent({
-    loader: () =>
-      remoteImporter().catch((err) => {
+    loader: async () => {
+      try {
+        const mod = await remoteImporter()
+        // If module has default export or named export
+        if (mod && mod.default) {
+          return mod.default.default ? mod.default.default : mod.default
+        }
+        return mod || fallbackComponent
+      } catch (err) {
         console.warn('[Module Federation] Remote server unavailable. Using fallback component.', err)
-        return { default: fallbackComponent }
-      }),
+        return fallbackComponent
+      }
+    },
   })
 }
 

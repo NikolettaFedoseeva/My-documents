@@ -1,1 +1,3 @@
-export { default as AuthPage } from './ui/auth-page.vue'
+import AuthPage from './ui/auth-page.vue'
+export default AuthPage
+export { AuthPage }

@@ -1,1 +1,3 @@
-﻿export { default as AdminPage } from './ui/admin-page.vue'
+import AdminPage from './ui/admin-page.vue'
+export default AdminPage
+export { AdminPage }

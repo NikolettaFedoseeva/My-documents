@@ -1,1 +1,3 @@
-export { default as LandingPage } from './ui/landing-page.vue'
+import LandingPage from './ui/landing-page.vue'
+export default LandingPage
+export { LandingPage }

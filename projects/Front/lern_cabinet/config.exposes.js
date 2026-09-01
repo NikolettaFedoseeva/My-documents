@@ -1,3 +1,3 @@
-﻿module.exports = {
-  './CabinetPage': './src/domains/app-workspace/index.ts',
+module.exports = {
+  './CabinetPage': './src/pages/cabinet/index.ts',
 };
