@@ -1,2 +1,5 @@
 export * from './search-docs'
 export * from './rate-doc'
+export * from './global-search'
+export * from './user-menu'
+export * from './notifications'

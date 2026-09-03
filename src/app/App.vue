@@ -1,112 +1,11 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import { useTheme, type AppTheme } from 'lern-ui-kit'
-
-const router = useRouter()
-const route = useRoute()
-const { currentTheme, themes, setTheme } = useTheme()
-
-const isThemeMenuOpen = ref(false)
-const themeDropdownRef = ref<HTMLElement | null>(null)
-
-const activeThemeObj = computed(() => {
-  return themes.find((t) => t.id === currentTheme.value) || themes[0]
-})
-
-const toggleThemeMenu = () => {
-  isThemeMenuOpen.value = !isThemeMenuOpen.value
-}
-
-const selectTheme = (themeId: string) => {
-  setTheme(themeId as AppTheme)
-  isThemeMenuOpen.value = false
-}
-
-const handleClickOutside = (e: MouseEvent) => {
-  if (themeDropdownRef.value && !themeDropdownRef.value.contains(e.target as Node)) {
-    isThemeMenuOpen.value = false
-  }
-}
-
-onMounted(() => {
-  document.addEventListener('click', handleClickOutside)
-})
-
-onBeforeUnmount(() => {
-  document.removeEventListener('click', handleClickOutside)
-})
-
-const navigateTo = (path: string) => {
-  router.push(path)
-}
+import { AppHeader } from '@/widgets/app-header'
 </script>
 
 <template>
   <div id="shell-layout">
-    <!-- Clean Top Header Nav -->
-    <header class="shell-header">
-      <div class="shell-header__brand" @click="navigateTo('/')">
-        <span class="shell-header__logo">📖</span>
-        <span class="shell-header__title">Lern Codex</span>
-      </div>
-
-      <nav class="shell-header__nav">
-        <button
-          class="nav-item"
-          :class="{ 'nav-item--active': route.path === '/' }"
-          @click="navigateTo('/')"
-        >
-          Главная
-        </button>
-
-        <button
-          class="nav-item"
-          :class="{ 'nav-item--active': route.path === '/docs' }"
-          @click="navigateTo('/docs')"
-        >
-          📖 Документация
-        </button>
-
-        <button
-          class="nav-item nav-item--highlight"
-          :class="{ 'nav-item--active': route.path === '/auth' || route.path === '/cabinet' }"
-          @click="navigateTo('/auth')"
-        >
-          🔑 Войти в Кабинет
-        </button>
-      </nav>
-
-      <!-- Sleek Circle Theme Switcher Dropdown -->
-      <div ref="themeDropdownRef" class="theme-circle-dropdown">
-        <button
-          class="theme-circle-btn"
-          :title="'Тема: ' + activeThemeObj.name"
-          @click="toggleThemeMenu"
-        >
-          <span class="theme-circle-btn__icon">{{ activeThemeObj.icon }}</span>
-        </button>
-
-        <transition name="dropdown-fade">
-          <div v-if="isThemeMenuOpen" class="theme-circle-menu">
-            <div class="theme-circle-menu__header">
-              <span>Выбор визуала темы</span>
-            </div>
-            <div
-              v-for="theme in themes"
-              :key="theme.id"
-              class="theme-circle-menu__item"
-              :class="{ 'theme-circle-menu__item--active': currentTheme === theme.id }"
-              @click="selectTheme(theme.id)"
-            >
-              <span class="theme-icon">{{ theme.icon }}</span>
-              <span class="theme-name">{{ theme.name }}</span>
-              <span v-if="currentTheme === theme.id" class="theme-check">✓</span>
-            </div>
-          </div>
-        </transition>
-      </div>
-    </header>
+    <!-- Сквозной премиальный FSD Хедер -->
+    <AppHeader />
 
     <!-- Main Viewport -->
     <main class="shell-content">
