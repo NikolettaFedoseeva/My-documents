@@ -1,1 +1,2 @@
-// export * from './user';
+export * from './search-docs'
+export * from './rate-doc'

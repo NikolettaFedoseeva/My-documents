@@ -7,6 +7,8 @@ import AdminPage from '@/pages/admin'
 import { UiKitPage } from '@/pages/ui-kit'
 import { WorkspacePage } from '@/domains/app-workspace'
 
+import { DocsPage } from '@/pages/docs'
+
 const loadRemoteWithFallback = (remoteImporter: () => Promise<any>, fallbackComponent: any) => {
   return defineAsyncComponent({
     loader: async () => {
@@ -33,7 +35,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/docs',
     name: 'docs',
-    component: WorkspacePage,
+    component: DocsPage,
   },
   {
     path: '/auth',
