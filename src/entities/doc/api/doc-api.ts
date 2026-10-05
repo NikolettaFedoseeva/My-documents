@@ -1,11 +1,14 @@
 import type {
   DocCategory,
   DocItem,
+  CourseCodex,
   DocFeedbackPayload,
   CreateDocDto,
   UpdateDocDto,
   CreateCategoryDto,
   UpdateCategoryDto,
+  CreateCourseDto,
+  UpdateCourseDto,
 } from '../types'
 import type { DocRepository } from './doc-repository.interface'
 import { DocLocalRepository } from './doc-local-repository'
@@ -16,48 +19,73 @@ import { DocLocalRepository } from './doc-local-repository'
 const repository: DocRepository = new DocLocalRepository()
 
 export class DocApiService {
-  static async getCategories(): Promise<DocCategory[]> {
-    return repository.getCategories()
+  // #region Курсы
+  static async getCourses(): Promise<CourseCodex[]> {
+    return repository.getCourses()
   }
 
-  static async getDocById(id: string): Promise<DocItem | null> {
-    return repository.getDocById(id)
+  static async getCourseById(id: string): Promise<CourseCodex | null> {
+    return repository.getCourseById(id)
   }
 
-  static async createCategory(dto: CreateCategoryDto): Promise<DocCategory> {
-    return repository.createCategory(dto)
+  static async getCourseBySlug(slug: string): Promise<CourseCodex | null> {
+    return repository.getCourseBySlug(slug)
   }
 
-  static async updateCategory(id: string, dto: UpdateCategoryDto): Promise<DocCategory> {
-    return repository.updateCategory(id, dto)
+  static async createCourse(dto: CreateCourseDto): Promise<CourseCodex> {
+    return repository.createCourse(dto)
   }
 
-  static async deleteCategory(id: string): Promise<void> {
-    return repository.deleteCategory(id)
+  static async updateCourse(id: string, dto: UpdateCourseDto): Promise<CourseCodex> {
+    return repository.updateCourse(id, dto)
   }
 
-  static async createDoc(dto: CreateDocDto): Promise<DocItem> {
-    return repository.createDoc(dto)
+  static async deleteCourse(id: string): Promise<void> {
+    return repository.deleteCourse(id)
+  }
+  // #endregion Курсы
+
+  // #region Модули и статьи
+  static async getCategories(courseId?: string): Promise<DocCategory[]> {
+    return repository.getCategories(courseId)
   }
 
-  static async updateDoc(id: string, dto: UpdateDocDto): Promise<DocItem> {
-    return repository.updateDoc(id, dto)
+  static async getDocById(id: string, courseId?: string): Promise<DocItem | null> {
+    return repository.getDocById(id, courseId)
   }
 
-  static async deleteDoc(id: string): Promise<void> {
-    return repository.deleteDoc(id)
+  static async createCategory(dto: CreateCategoryDto, courseId?: string): Promise<DocCategory> {
+    return repository.createCategory(dto, courseId)
   }
 
-  static async resetToDefaults(): Promise<DocCategory[]> {
+  static async updateCategory(id: string, dto: UpdateCategoryDto, courseId?: string): Promise<DocCategory> {
+    return repository.updateCategory(id, dto, courseId)
+  }
+
+  static async deleteCategory(id: string, courseId?: string): Promise<void> {
+    return repository.deleteCategory(id, courseId)
+  }
+
+  static async createDoc(dto: CreateDocDto, courseId?: string): Promise<DocItem> {
+    return repository.createDoc(dto, courseId)
+  }
+
+  static async updateDoc(id: string, dto: UpdateDocDto, courseId?: string): Promise<DocItem> {
+    return repository.updateDoc(id, dto, courseId)
+  }
+
+  static async deleteDoc(id: string, courseId?: string): Promise<void> {
+    return repository.deleteDoc(id, courseId)
+  }
+
+  static async resetToDefaults(): Promise<CourseCodex[]> {
     return repository.resetToDefaults()
   }
 
   static async submitFeedback(payload: DocFeedbackPayload): Promise<{ success: boolean }> {
     return Promise.resolve({ success: true })
   }
+  // #endregion Модули и статьи
 }
 
 export { repository as docRepository }
-export * from './doc-repository.interface'
-export * from './doc-local-repository'
-export * from './mock-data'

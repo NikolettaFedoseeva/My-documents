@@ -7,9 +7,11 @@ import {
   type DocFlashcardData,
   type DocQuiz,
   type DocQuizOption,
+  type CourseCodex,
   type CreateDocDto,
   type UpdateDocDto,
   type CreateCategoryDto,
+  type CreateCourseDto,
 } from '@/entities/doc'
 
 export type EditorTab = 'meta' | 'content' | 'flashcard' | 'quiz'
@@ -63,6 +65,21 @@ function createEmptyDocDraft(categoryId: string = ''): CreateDocDto & { id?: str
 
 export function useAuthorStudio() {
   // #region refs
+  // Курсы
+  const courses = ref<CourseCodex[]>([])
+  const selectedCourseId = ref<string | null>(null)
+  const isCourseModalOpen = ref<boolean>(false)
+  const newCourseForm = ref<CreateCourseDto>({
+    title: '',
+    slug: '',
+    description: '',
+    category: 'Frontend',
+    icon: '🎓',
+    level: 'intermediate',
+    tags: ['Vue 3'],
+  })
+
+  // Модули и текущая глава
   const categories = ref<DocCategory[]>([])
   const selectedDocId = ref<string | null>(null)
   const selectedCategoryId = ref<string>('')
@@ -86,6 +103,15 @@ export function useAuthorStudio() {
   // #endregion refs
 
   // #region computed
+  const isCourseBoardView = computed<boolean>(() => {
+    return selectedCourseId.value === null
+  })
+
+  const activeCourse = computed<CourseCodex | null>(() => {
+    if (!selectedCourseId.value) return null
+    return courses.value.find((c) => c.id === selectedCourseId.value) || null
+  })
+
   const allDocs = computed<DocItem[]>(() => {
     return categories.value.flatMap((c) => c.items)
   })
@@ -110,9 +136,9 @@ export function useAuthorStudio() {
       title: draft.title || 'Новая глава без названия',
       description: draft.description || 'Краткое описание главы будет отображаться здесь...',
       author: {
-        name: 'Автор курса',
-        role: 'Преподаватель',
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
+        name: activeCourse.value?.author.name || 'Автор курса',
+        role: activeCourse.value?.author.role || 'Преподаватель',
+        avatar: activeCourse.value?.author.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
       },
       updatedAt: new Date().toISOString().split('T')[0],
       readTimeMinutes: Number(draft.readTimeMinutes) || 3,
@@ -129,10 +155,62 @@ export function useAuthorStudio() {
   // #endregion computed
 
   // #region Функции загрузки
-  const loadCategories = async (): Promise<void> => {
+  const loadCourses = async (): Promise<void> => {
     isLoading.value = true
     try {
-      const data = await DocApiService.getCategories()
+      const data = await DocApiService.getCourses()
+      courses.value = data
+
+      // Если уже выбран курс, обновим его данные
+      if (selectedCourseId.value) {
+        const found = data.find((c) => c.id === selectedCourseId.value)
+        if (found) {
+          categories.value = found.modules
+        } else {
+          selectedCourseId.value = null
+        }
+      }
+    } catch (err) {
+      console.error('[useAuthorStudio] Ошибка загрузки курсов:', err)
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  const selectCourse = async (courseId: string | null): Promise<void> => {
+    selectedCourseId.value = courseId
+    selectedDocId.value = null
+
+    if (!courseId) {
+      categories.value = []
+      return
+    }
+
+    isLoading.value = true
+    try {
+      const course = await DocApiService.getCourseById(courseId)
+      if (course) {
+        categories.value = course.modules
+        if (course.modules.length > 0) {
+          selectedCategoryId.value = course.modules[0].id
+          if (course.modules[0].items.length > 0) {
+            selectDoc(course.modules[0].items[0].id)
+          } else {
+            startCreateNewDoc(course.modules[0].id)
+          }
+        }
+      }
+    } catch (err) {
+      console.error('[useAuthorStudio] Ошибка выбора курса:', err)
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  const loadCategories = async (): Promise<void> => {
+    if (!selectedCourseId.value) return
+    try {
+      const data = await DocApiService.getCategories(selectedCourseId.value)
       categories.value = data
 
       if (data.length > 0) {
@@ -156,8 +234,6 @@ export function useAuthorStudio() {
       }
     } catch (err) {
       console.error('Ошибка загрузки категорий в Author Studio:', err)
-    } finally {
-      isLoading.value = false
     }
   }
 
@@ -205,8 +281,71 @@ export function useAuthorStudio() {
   }
   // #endregion Функции загрузки
 
+  // #region Управление курсами
+  const openCreateCourseModal = (): void => {
+    newCourseForm.value = {
+      title: '',
+      slug: '',
+      description: '',
+      category: 'Frontend',
+      icon: '🎓',
+      level: 'intermediate',
+      tags: ['Новый курс'],
+    }
+    isCourseModalOpen.value = true
+  }
+
+  const closeCreateCourseModal = (): void => {
+    isCourseModalOpen.value = false
+  }
+
+  const submitCreateCourse = async (): Promise<void> => {
+    if (!newCourseForm.value.title.trim()) {
+      alert('Укажите название курса')
+      return
+    }
+
+    try {
+      const created = await DocApiService.createCourse(newCourseForm.value)
+      await loadCourses()
+      closeCreateCourseModal()
+      showToast(`Курс "${created.title}" успешно создан!`)
+      // Сразу переходим в редактор созданного курса
+      await selectCourse(created.id)
+    } catch (err) {
+      console.error('Ошибка создания курса:', err)
+      alert('Не удалось создать курс')
+    }
+  }
+
+  const deleteCourse = async (courseId: string): Promise<void> => {
+    const target = courses.value.find((c) => c.id === courseId)
+    const title = target?.title || 'этот курс'
+    if (!confirm(`Вы действительно хотите удалить курс "${title}" со всеми модулями и главами?`)) {
+      return
+    }
+
+    try {
+      await DocApiService.deleteCourse(courseId)
+      if (selectedCourseId.value === courseId) {
+        selectedCourseId.value = null
+      }
+      await loadCourses()
+      showToast(`Курс "${title}" удалён`)
+    } catch (err) {
+      console.error('Ошибка удаления курса:', err)
+      alert('Не удалось удалить курс')
+    }
+  }
+  // #endregion Управление курсами
+
   // #region Сохранение и удаление глав
   const saveDoc = async (): Promise<boolean> => {
+    if (!selectedCourseId.value) {
+      alert('Не выбран курс для сохранения')
+      return false
+    }
+
     if (!docDraft.value.title.trim()) {
       alert('Пожалуйста, укажите название главы')
       activeTab.value = 'meta'
@@ -239,23 +378,21 @@ export function useAuthorStudio() {
 
       let saved: DocItem
       if (selectedDocId.value) {
-        saved = await DocApiService.updateDoc(selectedDocId.value, payload as UpdateDocDto)
+        saved = await DocApiService.updateDoc(selectedDocId.value, payload as UpdateDocDto, selectedCourseId.value)
       } else {
-        saved = await DocApiService.createDoc(payload)
+        saved = await DocApiService.createDoc(payload, selectedCourseId.value)
         selectedDocId.value = saved.id
       }
 
       await loadCategories()
       selectDoc(saved.id)
+      await loadCourses() // актуализируем счётчики глав
 
-      saveSuccessMessage.value = 'Глава успешно сохранена и доступна в базе знаний!'
-      setTimeout(() => {
-        saveSuccessMessage.value = null
-      }, 3500)
+      showToast(`Глава «${saved.title}» сохранена!`)
       return true
     } catch (err) {
       console.error('Ошибка сохранения главы:', err)
-      alert('Ошибка при сохранении главы')
+      alert('Не удалось сохранить главу')
       return false
     } finally {
       isSaving.value = false
@@ -263,26 +400,29 @@ export function useAuthorStudio() {
   }
 
   const deleteCurrentDoc = async (): Promise<void> => {
-    if (!selectedDocId.value) return
-    const confirmed = confirm(`Вы уверены, что хотите удалить главу "${docDraft.value.title}"?`)
-    if (!confirmed) return
+    if (!selectedDocId.value || !selectedCourseId.value) return
+    const targetTitle = docDraft.value.title || 'эту главу'
+    if (!confirm(`Вы действительно хотите удалить ${targetTitle}?`)) return
 
     try {
-      await DocApiService.deleteDoc(selectedDocId.value)
+      await DocApiService.deleteDoc(selectedDocId.value, selectedCourseId.value)
       selectedDocId.value = null
       await loadCategories()
+      await loadCourses()
+      showToast(`Глава удалена`)
     } catch (err) {
       console.error('Ошибка удаления главы:', err)
+      alert('Не удалось удалить главу')
     }
   }
   // #endregion Сохранение и удаление глав
 
-  // #region Управление категориями
+  // #region Управление категориями (модулями)
   const openCreateCategoryModal = (): void => {
-    const nextIdx = categories.value.length + 1
+    const nextIndex = categories.value.length + 1
     newCategoryForm.value = {
       title: '',
-      code: nextIdx < 10 ? `0${nextIdx}` : `${nextIdx}`,
+      code: nextIndex < 10 ? `0${nextIndex}` : `${nextIndex}`,
       icon: '📁',
       description: '',
     }
@@ -294,56 +434,72 @@ export function useAuthorStudio() {
   }
 
   const submitCreateCategory = async (): Promise<void> => {
+    if (!selectedCourseId.value) return
     if (!newCategoryForm.value.title.trim()) {
-      alert('Введите название модуля')
+      alert('Укажите название модуля')
       return
     }
 
     try {
-      const created = await DocApiService.createCategory(newCategoryForm.value)
+      const created = await DocApiService.createCategory(newCategoryForm.value, selectedCourseId.value)
       await loadCategories()
+      await loadCourses()
+      closeCreateCategoryModal()
       selectedCategoryId.value = created.id
       startCreateNewDoc(created.id)
-      isCategoryModalOpen.value = false
+      showToast(`Модуль «${created.title}» создан!`)
     } catch (err) {
       console.error('Ошибка создания модуля:', err)
+      alert('Не удалось создать модуль')
     }
   }
 
-  const deleteCategory = async (catId: string): Promise<void> => {
-    const cat = categories.value.find((c) => c.id === catId)
-    const confirmed = confirm(`Удалить модуль "${cat?.title}" и все входящие в него главы?`)
-    if (!confirmed) return
+  const deleteCategory = async (categoryId: string): Promise<void> => {
+    if (!selectedCourseId.value) return
+    const cat = categories.value.find((c) => c.id === categoryId)
+    const title = cat?.title || 'этот модуль'
+    if (!confirm(`Удалить модуль «${title}» и все его статьи?`)) return
 
     try {
-      await DocApiService.deleteCategory(catId)
+      await DocApiService.deleteCategory(categoryId, selectedCourseId.value)
+      if (selectedCategoryId.value === categoryId) {
+        selectedCategoryId.value = ''
+        selectedDocId.value = null
+      }
       await loadCategories()
+      await loadCourses()
+      showToast(`Модуль удален`)
     } catch (err) {
       console.error('Ошибка удаления модуля:', err)
+      alert('Не удалось удалить модуль')
     }
   }
   // #endregion Управление категориями
 
   // #region Управление секциями контента
   const addSection = (type: 'text' | 'code' | 'callout'): void => {
-    const idx = docDraft.value.sections.length + 1
+    const newId = `sec-${Date.now().toString(36)}`
+    const count = docDraft.value.sections.length + 1
+
     const newSec: DocSectionContent = {
-      id: `sec-${Date.now()}`,
-      title: `Новый раздел ${idx}`,
+      id: newId,
+      title: `Секция ${count}`,
       level: 2,
-      text: 'Введите текст абзаца...',
+      text: type === 'text' ? 'Новый абзац с описанием концепции или алгоритма...' : '',
     }
 
     if (type === 'code') {
       newSec.codeSnippet = {
         language: 'typescript',
         filename: 'example.ts',
-        code: `// Пример исходного кода\nconst greeting: string = "Hello LERN";`,
+        code: '// Введите пример кода на TypeScript или Vue\nconst greeting = "Hello LERN!"\nconsole.log(greeting)',
       }
-    } else if (type === 'callout') {
+    }
+
+    if (type === 'callout') {
       newSec.callout = {
         type: 'tip',
-        message: 'Важное пояснение или полезный совет для читателя.',
+        message: 'Важное пояснение или рекомендация по лучшим практикам.',
       }
     }
 
@@ -355,71 +511,101 @@ export function useAuthorStudio() {
   }
 
   const moveSection = (index: number, direction: 'up' | 'down'): void => {
-    const targetIdx = direction === 'up' ? index - 1 : index + 1
-    if (targetIdx < 0 || targetIdx >= docDraft.value.sections.length) return
-    const temp = docDraft.value.sections[index]
-    docDraft.value.sections[index] = docDraft.value.sections[targetIdx]
-    docDraft.value.sections[targetIdx] = temp
+    const sections = docDraft.value.sections
+    const targetIndex = direction === 'up' ? index - 1 : index + 1
+    if (targetIndex < 0 || targetIndex >= sections.length) return
+    const temp = sections[index]
+    sections[index] = sections[targetIndex]
+    sections[targetIndex] = temp
   }
   // #endregion Управление секциями контента
 
-  // #region Управление тестом (Quiz)
+  // #region Управление экспресс-тестом
   const addQuizOption = (): void => {
-    if (!docDraft.value.quiz) {
-      docDraft.value.quiz = createEmptyDocDraft().quiz!
-    }
+    if (!docDraft.value.quiz) return
+    const options = docDraft.value.quiz.options
     const labels = ['A', 'B', 'C', 'D', 'E', 'F']
-    const nextIdx = docDraft.value.quiz.options.length
-    const label = labels[nextIdx] || `${nextIdx + 1}`
-    const optId = `opt-${Date.now()}`
+    const nextLabel = labels[options.length] || 'X'
+    const newId = `opt-${Date.now().toString(36)}`
 
-    docDraft.value.quiz.options.push({
-      id: optId,
-      label,
-      text: 'Новый вариант ответа',
+    options.push({
+      id: newId,
+      label: nextLabel,
+      text: `Новый вариант ответа ${nextLabel}`,
     })
   }
 
   const removeQuizOption = (index: number): void => {
-    if (!docDraft.value.quiz || docDraft.value.quiz.options.length <= 2) {
-      alert('В тесте должно оставаться минимум 2 варианта ответа')
+    if (!docDraft.value.quiz) return
+    const options = docDraft.value.quiz.options
+    if (options.length <= 2) {
+      alert('В тесте должно быть минимум 2 варианта ответа')
       return
     }
-    const removed = docDraft.value.quiz.options.splice(index, 1)[0]
-    // Если удалили правильный вариант — сбрасываем правильный на первый доступный
-    if (docDraft.value.quiz.correctId === removed.id && docDraft.value.quiz.options.length > 0) {
-      docDraft.value.quiz.correctId = docDraft.value.quiz.options[0].id
+    const removed = options.splice(index, 1)[0]
+    if (docDraft.value.quiz.correctId === removed.id && options.length > 0) {
+      docDraft.value.quiz.correctId = options[0].id
     }
   }
 
-  const setCorrectQuizOption = (optId: string): void => {
+  const setCorrectQuizOption = (optionId: string): void => {
     if (docDraft.value.quiz) {
-      docDraft.value.quiz.correctId = optId
+      docDraft.value.quiz.correctId = optionId
     }
   }
-  // #endregion Управление тестом (Quiz)
+  // #endregion Управление экспресс-тестом
 
-  // #region Сброс к исходным
+  // #region Сброс к дефолту
   const resetAllToDefaults = async (): Promise<void> => {
-    const confirmed = confirm('Сбросить базу данных к исходным демонстрационным главам? Ваши созданные статьи будут удалены.')
-    if (!confirmed) return
+    if (!confirm('Внимание: это сбросит все добавленные вами курсы и восстановит начальные демонстрационные материалы платформы. Продолжить?')) {
+      return
+    }
 
     isLoading.value = true
     try {
-      await DocApiService.resetToDefaults()
-      selectedDocId.value = null
-      await loadCategories()
+      const defaultCourses = await DocApiService.resetToDefaults()
+      courses.value = defaultCourses
+      selectedCourseId.value = null
+      categories.value = []
+      showToast('База знаний сброшена к исходным эталонам')
+    } catch (err) {
+      console.error('Ошибка сброса к дефолту:', err)
+      alert('Не удалось сбросить данные')
     } finally {
       isLoading.value = false
     }
   }
-  // #endregion Сброс к исходным
+  // #endregion Сброс к дефолту
+
+  const showToast = (message: string): void => {
+    saveSuccessMessage.value = message
+    setTimeout(() => {
+      if (saveSuccessMessage.value === message) {
+        saveSuccessMessage.value = null
+      }
+    }, 3500)
+  }
 
   onMounted(() => {
-    loadCategories()
+    loadCourses()
   })
 
   return {
+    // Курсы
+    courses,
+    selectedCourseId,
+    activeCourse,
+    isCourseBoardView,
+    isCourseModalOpen,
+    newCourseForm,
+    loadCourses,
+    selectCourse,
+    openCreateCourseModal,
+    closeCreateCourseModal,
+    submitCreateCourse,
+    deleteCourse,
+
+    // Модули и статьи
     categories,
     selectedDocId,
     selectedCategoryId,
@@ -434,7 +620,6 @@ export function useAuthorStudio() {
     saveSuccessMessage,
     isCategoryModalOpen,
     newCategoryForm,
-    loadCategories,
     selectDoc,
     startCreateNewDoc,
     saveDoc,

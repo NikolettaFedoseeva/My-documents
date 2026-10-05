@@ -1,6 +1,11 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useDocProgressStore, type DocCategory, type DocItem } from '@/entities/doc'
+import {
+  useDocProgressStore,
+  type DocCategory,
+  type DocItem,
+  type CourseCodex,
+} from '@/entities/doc'
 
 // #region defineProps
 interface Props {
@@ -8,9 +13,16 @@ interface Props {
   activeDocId: string
   searchQuery: string
   isExpanded: (categoryId: string) => boolean
+  courses?: CourseCodex[]
+  activeCourse?: CourseCodex | null
+  isCourseDropdownOpen?: boolean
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  courses: () => [],
+  activeCourse: null,
+  isCourseDropdownOpen: false,
+})
 // #endregion defineProps
 
 // #region defineEmits
@@ -18,6 +30,8 @@ const emit = defineEmits<{
   (e: 'selectDoc', docId: string): void
   (e: 'toggleCategory', categoryId: string): void
   (e: 'update:searchQuery', query: string): void
+  (e: 'selectCourse', courseId: string): void
+  (e: 'toggleCourseDropdown'): void
 }>()
 // #endregion defineEmits
 
@@ -61,6 +75,56 @@ const onInputSearch = (event: Event): void => {
 
 <template>
   <aside class="docs-sidebar">
+    <!-- Селектор активного курса (мультикурсовая платформа) -->
+    <div v-if="props.courses && props.courses.length > 0" class="docs-sidebar__course-picker">
+      <div class="course-picker-head">
+        <span class="picker-label">КУРС / ДИСЦИПЛИНА</span>
+        <span class="picker-badge">{{ props.courses.length }}</span>
+      </div>
+
+      <div
+        class="course-picker-trigger"
+        :class="{ 'course-picker-trigger--open': props.isCourseDropdownOpen }"
+        @click="emit('toggleCourseDropdown')"
+      >
+        <span class="trigger-icon">{{ props.activeCourse?.icon || '📚' }}</span>
+        <div class="trigger-meta">
+          <span class="trigger-title">{{ props.activeCourse?.title || 'Выберите курс' }}</span>
+          <span class="trigger-category">{{ props.activeCourse?.category || 'База знаний' }}</span>
+        </div>
+        <span class="trigger-chevron">▾</span>
+      </div>
+
+      <!-- Выпадающий список курсов -->
+      <transition name="dropdown-fade">
+        <div v-if="props.isCourseDropdownOpen" class="course-picker-menu">
+          <div
+            v-for="c in props.courses"
+            :key="c.id"
+            class="picker-menu-item"
+            :class="{ 'picker-menu-item--active': props.activeCourse?.id === c.id }"
+            @click="emit('selectCourse', c.id)"
+          >
+            <span class="item-icon">{{ c.icon || '📚' }}</span>
+            <div class="item-info">
+              <span class="item-title">{{ c.title }}</span>
+              <span class="item-cat">{{ c.modules.length }} мод. • {{ c.totalChapters || c.modules.reduce((s, m) => s + m.items.length, 0) }} глав</span>
+            </div>
+            <span v-if="props.activeCourse?.id === c.id" class="item-check">✓</span>
+          </div>
+
+          <router-link
+            to="/courses"
+            class="picker-create-link"
+            @click="emit('toggleCourseDropdown')"
+          >
+            <span>📚 Каталог всех курсов и дисциплин →</span>
+          </router-link>
+        </div>
+      </transition>
+    </div>
+
+
     <!-- Поиск по Карте Знаний -->
     <div class="docs-sidebar__search">
       <span class="docs-sidebar__search-icon">🔍</span>
@@ -72,6 +136,7 @@ const onInputSearch = (event: Event): void => {
         @input="onInputSearch"
       />
     </div>
+
 
     <!-- Академический прогресс-виджет курса -->
     <div class="docs-sidebar__progress-summary">
@@ -511,4 +576,196 @@ const onInputSearch = (event: Event): void => {
   opacity: 0;
   transform: translateY(-4px);
 }
+
+// Селектор активного курса
+.docs-sidebar__course-picker {
+  margin-bottom: 0.85rem;
+  position: relative;
+}
+
+.course-picker-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.35rem;
+}
+
+.picker-label {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: var(--text-muted, #94a3b8);
+}
+
+.picker-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.1rem 0.4rem;
+  border-radius: 9999px;
+  background: rgba(99, 102, 241, 0.15);
+  color: #6366f1;
+}
+
+.course-picker-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 10px;
+  background: var(--bg-card, rgba(30, 41, 59, 0.45));
+  border: 1px solid var(--border-color, rgba(148, 163, 184, 0.2));
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: #6366f1;
+    background: rgba(99, 102, 241, 0.08);
+  }
+
+  &--open {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+
+    .trigger-chevron {
+      transform: rotate(180deg);
+    }
+  }
+}
+
+.trigger-icon {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.trigger-meta {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.trigger-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-main, #f8fafc);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trigger-category {
+  font-size: 0.7rem;
+  color: #818cf8;
+  font-weight: 600;
+}
+
+.trigger-chevron {
+  font-size: 0.8rem;
+  color: var(--text-muted, #94a3b8);
+  transition: transform 0.2s ease;
+}
+
+// Выпадающее меню выбора курса
+.course-picker-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 0.45rem;
+  background-color: var(--bg-main, #0f172a);
+  background-image: linear-gradient(to bottom, rgba(30, 41, 59, 0.98), rgba(15, 23, 42, 0.98));
+  border: 1px solid var(--border-color, rgba(99, 102, 241, 0.35));
+  border-radius: 14px;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  z-index: 1000;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 0.45rem;
+}
+
+
+.picker-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: rgba(99, 102, 241, 0.15);
+  }
+
+  &--active {
+    background: rgba(99, 102, 241, 0.22);
+
+    .item-title {
+      color: #818cf8;
+      font-weight: 700;
+    }
+  }
+}
+
+.item-icon {
+  font-size: 1.25rem;
+}
+
+.item-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.item-title {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-main, #f8fafc);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.item-cat {
+  font-size: 0.68rem;
+  color: var(--text-muted, #94a3b8);
+}
+
+.item-check {
+  font-size: 0.85rem;
+  color: #34d399;
+  font-weight: 700;
+}
+
+.picker-create-link {
+  display: block;
+  text-align: center;
+  padding: 0.5rem;
+  margin-top: 0.25rem;
+  border-top: 1px solid var(--border-color, rgba(148, 163, 184, 0.15));
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #818cf8;
+  text-decoration: none;
+  transition: all 0.15s ease;
+
+  &:hover {
+    color: #a5b4fc;
+    background: rgba(99, 102, 241, 0.1);
+  }
+}
+
+.dropdown-fade-enter-active,
+.dropdown-fade-leave-active {
+  transition: all 0.18s ease;
+}
+
+.dropdown-fade-enter-from,
+.dropdown-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+}
 </style>
+

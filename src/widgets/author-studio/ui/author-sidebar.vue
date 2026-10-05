@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import type { DocCategory } from '@/entities/doc'
 
 // #region defineProps
@@ -65,6 +65,14 @@ const toggleCategory = (categoryId: string): void => {
 const isExpanded = (categoryId: string): boolean => {
   return expandedCategoryIds.value.has(categoryId)
 }
+
+watch(
+  () => props.categories,
+  (cats) => {
+    cats.forEach((c) => expandedCategoryIds.value.add(c.id))
+  },
+  { immediate: true, deep: true }
+)
 // #endregion Функции
 </script>
 

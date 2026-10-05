@@ -7,6 +7,13 @@ import DocsSkeleton from './docs-skeleton.vue'
 
 // #region composable
 const {
+  courses,
+  activeCourseId,
+  activeCourse,
+  isCourseDropdownOpen,
+  selectCourse,
+  toggleCourseDropdown,
+  closeCourseDropdown,
   filteredCategories,
   activeDocId,
   activeDoc,
@@ -36,7 +43,7 @@ const {
         @click="toggleTreeDrawer"
       >
         <span>🌳</span>
-        <span>Дерево Знаний (Оглавление)</span>
+        <span>Дерево Знаний ({{ activeCourse?.title || 'Оглавление' }})</span>
         <span class="badge">Каскад</span>
       </button>
 
@@ -50,7 +57,7 @@ const {
       <div class="docs-tree-drawer__backdrop" @click="closeTreeDrawer"></div>
       <div class="docs-tree-drawer__body">
         <div class="docs-tree-drawer__header">
-          <span>🌳 Карта Знаний</span>
+          <span>🌳 {{ activeCourse?.icon || '📚' }} {{ activeCourse?.title || 'Карта Знаний' }}</span>
           <button type="button" class="docs-tree-drawer__close" @click="closeTreeDrawer">✕</button>
         </div>
         <DocsSidebar
@@ -58,9 +65,14 @@ const {
           :active-doc-id="activeDocId"
           :search-query="searchQuery"
           :is-expanded="isCategoryExpanded"
+          :courses="courses"
+          :active-course="activeCourse"
+          :is-course-dropdown-open="isCourseDropdownOpen"
           @select-doc="selectDoc"
           @toggle-category="toggleCategory"
           @update:search-query="searchQuery = $event"
+          @select-course="selectCourse"
+          @toggle-course-dropdown="toggleCourseDropdown"
         />
       </div>
     </div>
@@ -87,11 +99,17 @@ const {
           :active-doc-id="activeDocId"
           :search-query="searchQuery"
           :is-expanded="isCategoryExpanded"
+          :courses="courses"
+          :active-course="activeCourse"
+          :is-course-dropdown-open="isCourseDropdownOpen"
           @select-doc="selectDoc"
           @toggle-category="toggleCategory"
           @update:search-query="searchQuery = $event"
+          @select-course="selectCourse"
+          @toggle-course-dropdown="toggleCourseDropdown"
         />
       </aside>
+
 
       <!-- 2. Центральная колонка: Пергаментный Лист Статьи (Codex Sheet) -->
       <div class="docs-workspace__content-col">

@@ -41,3 +41,27 @@ export interface UpdateDocDto {
   flashcard?: DocFlashcardData
   quiz?: DocQuiz
 }
+
+export interface CreateCourseDto {
+  title: string
+  slug?: string
+  description: string
+  category: string
+  icon?: string
+  level?: 'beginner' | 'intermediate' | 'advanced'
+  authorName?: string
+  tags?: string[]
+}
+
+export interface UpdateCourseDto {
+  title?: string
+  slug?: string
+  description?: string
+  category?: string
+  icon?: string
+  level?: 'beginner' | 'intermediate' | 'advanced'
+  authorName?: string
+  tags?: string[]
+  isPublished?: boolean
+}
+

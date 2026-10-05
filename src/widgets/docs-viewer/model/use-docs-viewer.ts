@@ -1,10 +1,25 @@
-import { ref, computed, onMounted } from 'vue'
-import { DocCategory, DocItem, DocApiService, DocAdapter, DocTocItem, useDocProgressStore } from '@/entities/doc'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import {
+  type DocCategory,
+  type DocItem,
+  type CourseCodex,
+  DocApiService,
+  DocAdapter,
+  type DocTocItem,
+  useDocProgressStore,
+} from '@/entities/doc'
 
 export function useDocsViewer() {
   const progressStore = useDocProgressStore()
+  const route = useRoute()
+  const router = useRouter()
 
   // #region refs
+  const courses = ref<CourseCodex[]>([])
+  const activeCourseId = ref<string>('')
+  const isCourseDropdownOpen = ref<boolean>(false)
+
   const categories = ref<DocCategory[]>([])
   const activeDocId = ref<string>('')
   const searchQuery = ref<string>('')
@@ -16,6 +31,16 @@ export function useDocsViewer() {
   // #endregion refs
 
   // #region computed
+  const activeCourse = computed<CourseCodex | null>(() => {
+    return (
+      courses.value.find(
+        (c) => c.id === activeCourseId.value || c.slug === activeCourseId.value
+      ) ||
+      courses.value[0] ||
+      null
+    )
+  })
+
   const allDocs = computed<DocItem[]>(() => {
     return categories.value.flatMap((cat) => cat.items)
   })
@@ -78,27 +103,53 @@ export function useDocsViewer() {
   // #endregion computed
 
   // #region Функции
-  const loadDocs = async (): Promise<void> => {
-    isLoading.value = true
-    isError.value = false
+  const loadCourseDocs = async (courseId: string): Promise<void> => {
     try {
-      const data = await DocApiService.getCategories()
+      const data = await DocApiService.getCategories(courseId)
       categories.value = data
-
-      // По умолчанию раскрываем все категории
+      expandedCategoryIds.value.clear()
       data.forEach((cat) => expandedCategoryIds.value.add(cat.id))
 
-      // Восстанавливаем последний активный документ из сохраненного прогресса
+      // Восстанавливаем последний активный документ или выбираем первый
       const savedLastDocId = progressStore.lastActiveDocId
       const allItems = data.flatMap((c) => c.items)
       if (savedLastDocId && allItems.some((d) => d.id === savedLastDocId)) {
         activeDocId.value = savedLastDocId
-      } else if (data.length > 0 && data[0].items.length > 0) {
-        activeDocId.value = data[0].items[0].id
+      } else if (allItems.length > 0) {
+        activeDocId.value = allItems[0].id
+      } else {
+        activeDocId.value = ''
       }
 
       if (activeDocId.value) {
         progressStore.visitDoc(activeDocId.value)
+      }
+    } catch (err) {
+      console.error('Ошибка загрузки категорий курса:', err)
+    }
+  }
+
+  const loadDocs = async (targetCourseId?: string): Promise<void> => {
+    isLoading.value = true
+    isError.value = false
+    try {
+      const allCourses = await DocApiService.getCourses()
+      courses.value = allCourses
+
+      // Определяем целевой курс: из route query, аргумента или первого доступного
+      const routeCourseParam = (route?.query?.course as string) || targetCourseId
+      const foundCourse = allCourses.find(
+        (c) => c.id === routeCourseParam || c.slug === routeCourseParam
+      )
+
+      if (foundCourse) {
+        activeCourseId.value = foundCourse.id
+      } else if (allCourses.length > 0) {
+        activeCourseId.value = allCourses[0].id
+      }
+
+      if (activeCourseId.value) {
+        await loadCourseDocs(activeCourseId.value)
       }
     } catch (err) {
       console.error('Ошибка загрузки документации:', err)
@@ -106,6 +157,28 @@ export function useDocsViewer() {
     } finally {
       isLoading.value = false
     }
+  }
+
+  const selectCourse = async (courseId: string): Promise<void> => {
+    activeCourseId.value = courseId
+    isCourseDropdownOpen.value = false
+
+    if (router && route) {
+      router.replace({ query: { ...route.query, course: courseId } }).catch(() => {})
+    }
+
+    isLoading.value = true
+    await loadCourseDocs(courseId)
+    isLoading.value = false
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const toggleCourseDropdown = (): void => {
+    isCourseDropdownOpen.value = !isCourseDropdownOpen.value
+  }
+
+  const closeCourseDropdown = (): void => {
+    isCourseDropdownOpen.value = false
   }
 
   const selectDoc = (docId: string): void => {
@@ -144,9 +217,29 @@ export function useDocsViewer() {
   onMounted(() => {
     loadDocs()
   })
+
+  // Реакция на изменение query-параметра курса
+  watch(
+    () => route?.query?.course,
+    (newCourse) => {
+      if (newCourse && typeof newCourse === 'string' && newCourse !== activeCourseId.value) {
+        selectCourse(newCourse)
+      }
+    }
+  )
   // #endregion Хуки жизненного цикла
 
   return {
+    // Курсы
+    courses,
+    activeCourseId,
+    activeCourse,
+    isCourseDropdownOpen,
+    selectCourse,
+    toggleCourseDropdown,
+    closeCourseDropdown,
+
+    // Главы и модули
     categories,
     filteredCategories,
     activeDocId,

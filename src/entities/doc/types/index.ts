@@ -102,4 +102,28 @@ export interface DocProgressStorageData {
   lastActivityDate: string
 }
 
+export interface CourseCodex {
+  id: string
+  slug: string
+  title: string
+  description: string
+  category: string
+  icon: string
+  level: 'beginner' | 'intermediate' | 'advanced'
+  author: {
+    id?: string
+    name: string
+    avatar?: string
+    role?: string
+  }
+  tags: string[]
+  isPublished: boolean
+  modules: DocCategory[]
+  totalChapters?: number
+  estimatedHours?: number
+  createdAt: string
+  updatedAt: string
+}
+
 export * from './dto'
+

@@ -15,11 +15,13 @@ export function useAppHeader() {
   // #region Navigation Items
   const navLinks: NavLink[] = [
     { title: 'Главная', path: '/' },
-    { title: 'Документация', path: '/docs', icon: '📖' },
+    { title: 'Курсы', path: '/courses', icon: '📚' },
+    { title: 'Справочник', path: '/docs', icon: '📖' },
     { title: 'Студия автора', path: '/author', icon: '✍️' },
     { title: 'Войти в Кабинет', path: '/auth', icon: '🔑', isHighlight: true },
   ]
   // #endregion Navigation Items
+
 
   // #region computed
   const currentPath = computed<string>(() => route.path)

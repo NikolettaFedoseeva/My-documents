@@ -9,6 +9,7 @@ import { WorkspacePage } from '@/domains/app-workspace'
 
 import { DocsPage } from '@/pages/docs'
 import { AuthorPage } from '@/pages/author'
+import { CoursesPage } from '@/pages/courses'
 
 const loadRemoteWithFallback = (remoteImporter: () => Promise<any>, fallbackComponent: any) => {
   return defineAsyncComponent({
@@ -34,6 +35,15 @@ const routes: Array<RouteRecordRaw> = [
     component: loadRemoteWithFallback(() => import('lern_landing/LandingPage'), LandingPage),
   },
   {
+    path: '/courses',
+    name: 'courses',
+    component: CoursesPage,
+  },
+  {
+    path: '/catalog',
+    redirect: '/courses',
+  },
+  {
     path: '/docs',
     name: 'docs',
     component: DocsPage,
@@ -43,6 +53,7 @@ const routes: Array<RouteRecordRaw> = [
     name: 'author',
     component: AuthorPage,
   },
+
   {
     path: '/auth',
     name: 'auth',
