@@ -16,8 +16,19 @@
   --text-muted: #64748b;
   --text-inverse: #ffffff;
   
+  /* Универсальные алиасы дизайн-системы */
+  --color-bg: var(--bg-app);
+  --color-surface: var(--bg-card);
+  --color-surface-hover: var(--bg-card-hover);
+  --color-border: var(--border-color);
+  --color-text-main: var(--text-main);
+  --color-text-muted: var(--text-muted);
+  --color-primary: var(--primary);
+  --color-bg-alt: var(--bg-container);
+  
   --primary: #1e3a8a;
   --primary-hover: #1e40af;
+
   --primary-gradient: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%);
   
   --secondary: #e2d9cc;

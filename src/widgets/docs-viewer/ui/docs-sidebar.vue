@@ -672,11 +672,10 @@ const onInputSearch = (event: Event): void => {
   left: 0;
   right: 0;
   margin-top: 0.45rem;
-  background-color: var(--bg-main, #0f172a);
-  background-image: linear-gradient(to bottom, rgba(30, 41, 59, 0.98), rgba(15, 23, 42, 0.98));
+  background: var(--bg-container, #111827);
   border: 1px solid var(--border-color, rgba(99, 102, 241, 0.35));
   border-radius: 14px;
-  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35), 0 0 0 1px var(--border-color, rgba(255, 255, 255, 0.08));
   z-index: 1000;
   overflow: hidden;
   display: flex;

@@ -707,15 +707,18 @@ const onOpenReader = () => {
   border-radius: 8px;
   font-size: 0.88rem;
   font-weight: 600;
-  background: #6366f1;
-  color: #ffffff;
+  background: var(--btn-primary-bg, var(--primary, #6366f1));
+  color: var(--btn-primary-text, #ffffff);
   border: none;
   cursor: pointer;
+  transition: all 0.2s ease;
 
   &:hover {
-    background: #4f46e5;
+    filter: brightness(1.1);
+    transform: translateY(-1px);
   }
 }
+
 
 .spinner-large {
   width: 44px;

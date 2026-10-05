@@ -313,8 +313,8 @@ const onOpenReader = (course: CourseCodex) => {
   font-size: 0.8rem;
   font-weight: 600;
   background: rgba(99, 102, 241, 0.12);
-  color: #6366f1;
-  border: 1px solid rgba(99, 102, 241, 0.25);
+  color: var(--primary, #6366f1);
+  border: 1px solid var(--border-color-glow, rgba(99, 102, 241, 0.25));
   margin-bottom: 0.75rem;
 }
 
@@ -342,16 +342,16 @@ const onOpenReader = (course: CourseCodex) => {
   border-radius: 10px;
   font-size: 0.95rem;
   font-weight: 700;
-  color: #ffffff;
-  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  color: var(--btn-primary-text, #ffffff);
+  background: var(--btn-primary-bg, var(--primary, #6366f1));
   border: none;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+  box-shadow: var(--btn-primary-shadow, 0 4px 14px rgba(99, 102, 241, 0.35));
   transition: all 0.2s ease;
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45);
+    filter: brightness(1.1);
   }
 
   .btn-icon {
@@ -359,6 +359,7 @@ const onOpenReader = (course: CourseCodex) => {
     line-height: 1;
   }
 }
+
 
 .btn-secondary {
   padding: 0.75rem 1.2rem;
