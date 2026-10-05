@@ -1,55 +1,34 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { User, UserApiService } from '@/entities/user'
-
-export interface NavLink {
-  title: string
-  path: string
-  icon?: string
-  requiresRole?: string
-}
+import { useTheme, type AppTheme } from '@/shared/lib/theme'
+import type { NavLink } from './types'
 
 export function useAppHeader() {
   const route = useRoute()
   const router = useRouter()
+  const { currentTheme, themes, setTheme, initTheme } = useTheme()
 
   // #region refs
-  const currentUser = ref<User | null>(null)
   const isMobileMenuOpen = ref<boolean>(false)
-  const isSearchModalOpen = ref<boolean>(false)
   // #endregion refs
 
   // #region Navigation Items
   const navLinks: NavLink[] = [
-    { title: 'Главная', path: '/', icon: '🏠' },
-    { title: 'Документация', path: '/docs', icon: '📚' },
-    { title: 'Кабинет', path: '/cabinet', icon: '👤' },
-    { title: 'Админка', path: '/admin', icon: '⚙️', requiresRole: 'admin' },
-    { title: 'UI Kit', path: '/ui-kit', icon: '🎨' },
+    { title: 'Главная', path: '/' },
+    { title: 'Документация', path: '/docs', icon: '📖' },
+    { title: 'Войти в Кабинет', path: '/auth', icon: '🔑', isHighlight: true },
   ]
   // #endregion Navigation Items
 
   // #region computed
-  const visibleNavLinks = computed<NavLink[]>(() => {
-    return navLinks.filter((link) => {
-      if (!link.requiresRole) return true
-      return currentUser.value?.role === link.requiresRole
-    })
-  })
-
   const currentPath = computed<string>(() => route.path)
+
+  const activeThemeObj = computed(() => {
+    return themes.find((t) => t.id === currentTheme.value) || themes[0]
+  })
   // #endregion computed
 
   // #region Функции
-  const loadUser = async (): Promise<void> => {
-    try {
-      const user = await UserApiService.getCurrentUser()
-      currentUser.value = user
-    } catch (err) {
-      console.error('Ошибка загрузки профиля в хедере:', err)
-    }
-  }
-
   const navigateTo = (path: string): void => {
     isMobileMenuOpen.value = false
     router.push(path)
@@ -63,32 +42,27 @@ export function useAppHeader() {
     isMobileMenuOpen.value = false
   }
 
-  const handleSearchTrigger = (): void => {
-    isSearchModalOpen.value = true
-  }
-
-  const handleLogout = (): void => {
-    currentUser.value = null
-    navigateTo('/auth')
+  const selectTheme = (themeId: AppTheme): void => {
+    setTheme(themeId)
   }
   // #endregion Функции
 
   // #region Хуки жизненного цикла
   onMounted(() => {
-    loadUser()
+    initTheme()
   })
   // #endregion Хуки жизненного цикла
 
   return {
-    currentUser,
-    visibleNavLinks,
+    navLinks,
     currentPath,
     isMobileMenuOpen,
-    isSearchModalOpen,
+    currentTheme,
+    themes,
+    activeThemeObj,
     navigateTo,
     toggleMobileMenu,
     closeMobileMenu,
-    handleSearchTrigger,
-    handleLogout,
+    selectTheme,
   }
 }

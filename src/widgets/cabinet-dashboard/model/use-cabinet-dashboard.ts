@@ -1,0 +1,63 @@
+import { ref, onMounted } from 'vue'
+import { Course, AssignmentItem, Achievement, UserCabinetStats, CourseApiService } from '@/entities/course'
+import { User, UserApiService } from '@/entities/user'
+
+export type CabinetTab = 'courses' | 'assignments' | 'achievements' | 'settings'
+
+export function useCabinetDashboard() {
+  // #region refs
+  const activeTab = ref<CabinetTab>('courses')
+  const user = ref<User | null>(null)
+  const stats = ref<UserCabinetStats | null>(null)
+  const courses = ref<Course[]>([])
+  const assignments = ref<AssignmentItem[]>([])
+  const achievements = ref<Achievement[]>([])
+  const isLoading = ref<boolean>(true)
+  // #endregion refs
+
+  // #region Функции
+  const loadCabinetData = async (): Promise<void> => {
+    isLoading.value = true
+    try {
+      const [userData, statsData, coursesData, assignmentsData, achievementsData] = await Promise.all([
+        UserApiService.getCurrentUser(),
+        CourseApiService.getCabinetStats(),
+        CourseApiService.getUserCourses(),
+        CourseApiService.getAssignments(),
+        CourseApiService.getAchievements(),
+      ])
+
+      user.value = userData
+      stats.value = statsData
+      courses.value = coursesData
+      assignments.value = assignmentsData
+      achievements.value = achievementsData
+    } catch (err) {
+      console.error('Ошибка загрузки данных кабинета:', err)
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  const setTab = (tab: CabinetTab): void => {
+    activeTab.value = tab
+  }
+  // #endregion Функции
+
+  // #region Хуки жизненного цикла
+  onMounted(() => {
+    loadCabinetData()
+  })
+  // #endregion Хуки жизненного цикла
+
+  return {
+    activeTab,
+    user,
+    stats,
+    courses,
+    assignments,
+    achievements,
+    isLoading,
+    setTab,
+  }
+}

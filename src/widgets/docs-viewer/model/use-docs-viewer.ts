@@ -10,6 +10,7 @@ export function useDocsViewer() {
   const isLoading = ref<boolean>(true)
   const isError = ref<boolean>(false)
   const activeTocId = ref<string>('')
+  const isTreeDrawerOpen = ref<boolean>(false)
   // #endregion refs
 
   // #region computed
@@ -22,6 +23,25 @@ export function useDocsViewer() {
       return allDocs.value[0]
     }
     return allDocs.value.find((doc) => doc.id === activeDocId.value) || null
+  })
+
+  const currentDocIndex = computed<number>(() => {
+    if (!activeDoc.value) return -1
+    return allDocs.value.findIndex((d) => d.id === activeDoc.value?.id)
+  })
+
+  const prevDoc = computed<DocItem | null>(() => {
+    if (currentDocIndex.value > 0) {
+      return allDocs.value[currentDocIndex.value - 1]
+    }
+    return null
+  })
+
+  const nextDoc = computed<DocItem | null>(() => {
+    if (currentDocIndex.value >= 0 && currentDocIndex.value < allDocs.value.length - 1) {
+      return allDocs.value[currentDocIndex.value + 1]
+    }
+    return null
   })
 
   const tocItems = computed<DocTocItem[]>(() => {
@@ -78,6 +98,8 @@ export function useDocsViewer() {
 
   const selectDoc = (docId: string): void => {
     activeDocId.value = docId
+    isTreeDrawerOpen.value = false
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const toggleCategory = (categoryId: string): void => {
@@ -95,6 +117,14 @@ export function useDocsViewer() {
   const setActiveToc = (tocId: string): void => {
     activeTocId.value = tocId
   }
+
+  const toggleTreeDrawer = (): void => {
+    isTreeDrawerOpen.value = !isTreeDrawerOpen.value
+  }
+
+  const closeTreeDrawer = (): void => {
+    isTreeDrawerOpen.value = false
+  }
   // #endregion Функции
 
   // #region Хуки жизненного цикла
@@ -108,15 +138,20 @@ export function useDocsViewer() {
     filteredCategories,
     activeDocId,
     activeDoc,
+    prevDoc,
+    nextDoc,
     searchQuery,
     isLoading,
     isError,
     tocItems,
     activeTocId,
+    isTreeDrawerOpen,
     loadDocs,
     selectDoc,
     toggleCategory,
     isCategoryExpanded,
     setActiveToc,
+    toggleTreeDrawer,
+    closeTreeDrawer,
   }
 }

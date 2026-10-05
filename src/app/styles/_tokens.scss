@@ -154,17 +154,17 @@
 [data-theme="mindful-sage"] {
   --font-family: 'Inter', 'DM Sans', sans-serif;
   --bg-app: linear-gradient(135deg, #374a50 0%, #2f3e46 50%, #1f2a2e 100%);
-  --bg-container: rgba(47, 62, 70, 0.7);
+  --bg-container: #243339;
   --bg-card: rgba(241, 245, 244, 0.14);
   --bg-card-hover: rgba(241, 245, 244, 0.22);
   --border-color: rgba(255, 255, 255, 0.22);
-  --border-color-glow: #5e8b7e;
+  --border-color-glow: #76a89a;
   --text-main: #f1f5f4;
   --text-muted: #a7c7e7;
   --text-inverse: #ffffff;
   
-  --primary: #5e8b7e;
-  --primary-hover: #4d756a;
+  --primary: #76a89a;
+  --primary-hover: #5e8b7e;
   --primary-gradient: linear-gradient(135deg, #5e8b7e 0%, #76a89a 100%);
   
   --secondary: rgba(255, 255, 255, 0.15);

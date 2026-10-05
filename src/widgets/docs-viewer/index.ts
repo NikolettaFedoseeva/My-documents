@@ -1,2 +1,5 @@
 export * from './model/use-docs-viewer'
 export { default as DocsViewer } from './ui/docs-viewer.vue'
+export { default as DocsSidebar } from './ui/docs-sidebar.vue'
+export { default as DocsContentViewer } from './ui/docs-content-viewer.vue'
+export { default as DocsStudyDeck } from './ui/docs-study-deck.vue'

@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { DocCategory } from '@/entities/doc'
-import { SearchDocsInput } from '@/features/search-docs'
+import type { DocCategory } from '@/entities/doc'
 
 // #region defineProps
 interface Props {
@@ -15,74 +14,111 @@ const props = defineProps<Props>()
 
 // #region defineEmits
 const emit = defineEmits<{
-  (e: 'select-doc', id: string): void
-  (e: 'toggle-category', id: string): void
-  (e: 'update:searchQuery', val: string): void
+  (e: 'selectDoc', docId: string): void
+  (e: 'toggleCategory', categoryId: string): void
+  (e: 'update:searchQuery', query: string): void
 }>()
 // #endregion defineEmits
+
+// #region Функции
+const onInputSearch = (event: Event): void => {
+  const target = event.target as HTMLInputElement
+  emit('update:searchQuery', target.value)
+}
+// #endregion Функции
 </script>
 
 <template>
   <aside class="docs-sidebar">
+    <!-- Поиск по Карте Знаний -->
     <div class="docs-sidebar__search">
-      <SearchDocsInput
-        :model-value="props.searchQuery"
-        placeholder="Поиск по документам..."
-        @update:model-value="emit('update:searchQuery', $event)"
+      <span class="docs-sidebar__search-icon">🔍</span>
+      <input
+        type="text"
+        :value="props.searchQuery"
+        placeholder="Поиск по Карте Знаний..."
+        class="docs-sidebar__search-input"
+        @input="onInputSearch"
       />
     </div>
 
+    <!-- Заголовок карты знаний -->
+    <div class="docs-sidebar__title-bar">
+      <span class="docs-sidebar__title-text">🌳 КАРТА ЗНАНИЙ (CODEX)</span>
+      <span class="docs-sidebar__count">{{ props.categories.length }} модулей</span>
+    </div>
+
+    <!-- Каскадное дерево знаний -->
     <nav class="docs-sidebar__nav">
       <div
         v-for="category in props.categories"
         :key="category.id"
-        class="docs-sidebar__category"
+        class="tree-node"
       >
+        <!-- Шапка модуля (Каскадный блок) -->
         <button
           type="button"
-          class="docs-sidebar__category-header"
-          @click="emit('toggle-category', category.id)"
+          class="tree-node__header"
+          @click="emit('toggleCategory', category.id)"
         >
-          <div class="docs-sidebar__category-meta">
-            <span class="docs-sidebar__category-icon">{{ category.icon }}</span>
-            <span class="docs-sidebar__category-title">{{ category.title }}</span>
+          <div class="tree-node__header-left">
+            <span v-if="category.code" class="tree-node__code">{{ category.code }}</span>
+            <span class="tree-node__icon">{{ category.icon }}</span>
+            <span class="tree-node__title">{{ category.title }}</span>
           </div>
 
-          <div class="docs-sidebar__category-controls">
-            <span class="docs-sidebar__count">{{ category.items.length }}</span>
+          <div class="tree-node__header-right">
+            <span v-if="category.progressPercent === 100" class="status-badge status-badge--done">✓</span>
+            <span v-else-if="category.progressPercent && category.progressPercent > 0" class="status-badge status-badge--progress">
+              {{ category.progressPercent }}%
+            </span>
             <span
-              class="docs-sidebar__arrow"
-              :class="{ 'docs-sidebar__arrow--expanded': props.isExpanded(category.id) }"
+              class="tree-node__arrow"
+              :class="{ 'tree-node__arrow--open': props.isExpanded(category.id) }"
             >
               ▾
             </span>
           </div>
         </button>
 
-        <ul
-          v-if="props.isExpanded(category.id)"
-          class="docs-sidebar__items"
-        >
-          <li
-            v-for="item in category.items"
-            :key="item.id"
-            class="docs-sidebar__item"
+        <!-- Ветка уроков / статей -->
+        <transition name="tree-expand">
+          <ul
+            v-if="props.isExpanded(category.id)"
+            class="tree-branch"
           >
-            <button
-              type="button"
-              class="docs-sidebar__item-btn"
-              :class="{ 'docs-sidebar__item-btn--active': item.id === props.activeDocId }"
-              @click="emit('select-doc', item.id)"
+            <li
+              v-for="item in category.items"
+              :key="item.id"
+              class="tree-leaf"
             >
-              <span class="docs-sidebar__item-dot"></span>
-              <span class="docs-sidebar__item-title">{{ item.title }}</span>
-            </button>
-          </li>
-        </ul>
-      </div>
+              <button
+                type="button"
+                class="tree-leaf__btn"
+                :class="{
+                  'tree-leaf__btn--active': props.activeDocId === item.id,
+                  'tree-leaf__btn--completed': item.status === 'completed',
+                  'tree-leaf__btn--locked': item.status === 'locked',
+                }"
+                @click="emit('selectDoc', item.id)"
+              >
+                <!-- Соединительная линия ветки -->
+                <span class="tree-leaf__connector"></span>
 
-      <div v-if="props.categories.length === 0" class="docs-sidebar__empty">
-        <span>Ничего не найдено 🔍</span>
+                <!-- Код урока: 01.1, 01.2 -->
+                <span v-if="item.code" class="tree-leaf__code">{{ item.code }}</span>
+
+                <span class="tree-leaf__title">{{ item.title }}</span>
+
+                <span class="tree-leaf__status-icon">
+                  <span v-if="item.status === 'completed'" title="Изучено">✓</span>
+                  <span v-else-if="props.activeDocId === item.id" title="Текущий урок">🔥</span>
+                  <span v-else-if="item.status === 'locked'" title="Заблокировано">🔒</span>
+                </span>
+              </button>
+            </li>
+          </ul>
+        </transition>
       </div>
     </nav>
   </aside>
@@ -90,145 +126,253 @@ const emit = defineEmits<{
 
 <style scoped lang="scss">
 .docs-sidebar {
+  width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
-  width: 280px;
-  min-width: 280px;
-  background: rgba(15, 23, 42, 0.45);
-  backdrop-filter: blur(16px);
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 1.25rem;
-  gap: 1.25rem;
+  background: var(--bg-container, #1c2d47);
+  border-right: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+  padding: 1.25rem 1rem;
+  box-sizing: border-box;
+  overflow-y: auto;
 
   &__search {
+    position: relative;
+    margin-bottom: 1rem;
+  }
+
+  &__search-icon {
+    position: absolute;
+    left: 0.85rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.85rem;
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  &__search-input {
     width: 100%;
+    background: var(--bg-card, rgba(0, 0, 0, 0.25));
+    border: 1px solid var(--border-color, rgba(255, 255, 255, 0.12));
+    border-radius: var(--radius-sm, 10px);
+    padding: 0.6rem 0.85rem 0.6rem 2.2rem;
+    color: var(--text-main, #ffffff);
+    font-size: 0.85rem;
+    box-sizing: border-box;
+    outline: none;
+    transition: all 0.2s ease;
+
+    &:focus {
+      border-color: var(--primary, #38bdf8);
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);
+    }
+
+    &::placeholder {
+      color: var(--text-muted, #94a3b8);
+      font-size: 0.82rem;
+    }
+  }
+
+  &__title-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.4rem 0.4rem 0.8rem;
+    border-bottom: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+    margin-bottom: 0.75rem;
+  }
+
+  &__title-text {
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    color: var(--text-muted, #94a3b8);
+  }
+
+  &__count {
+    font-size: 0.7rem;
+    color: var(--text-muted, #94a3b8);
+    opacity: 0.8;
   }
 
   &__nav {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
-    overflow-y: auto;
+    gap: 0.6rem;
   }
+}
 
-  &__category-header {
+/* Tree Nodes */
+.tree-node {
+  display: flex;
+  flex-direction: column;
+
+  &__header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     width: 100%;
-    background: transparent;
-    border: none;
-    padding: 0.5rem 0.6rem;
-    border-radius: 8px;
-    color: #94a3b8;
+    padding: 0.6rem 0.75rem;
+    background: var(--bg-card, rgba(255, 255, 255, 0.04));
+    border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+    border-radius: var(--radius-sm, 10px);
+    color: var(--text-main, #ffffff);
     cursor: pointer;
     transition: all 0.2s ease;
+    text-align: left;
 
     &:hover {
-      background: rgba(255, 255, 255, 0.05);
-      color: #f8fafc;
+      background: var(--bg-card-hover, rgba(255, 255, 255, 0.08));
+      border-color: var(--primary, #38bdf8);
     }
   }
 
-  &__category-meta {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-  }
-
-  &__category-icon {
-    font-size: 1rem;
-  }
-
-  &__category-title {
-    font-size: 0.875rem;
-    font-weight: 600;
-  }
-
-  &__category-controls {
+  &__header-left {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    min-width: 0;
   }
 
-  &__count {
+  &__code {
     font-size: 0.7rem;
-    padding: 0.15rem 0.45rem;
-    border-radius: 9999px;
-    background: rgba(255, 255, 255, 0.06);
-    color: #64748b;
+    font-weight: 800;
+    padding: 0.15rem 0.35rem;
+    border-radius: 4px;
+    background: rgba(99, 102, 241, 0.2);
+    color: var(--primary, #818cf8);
+    border: 1px solid rgba(99, 102, 241, 0.3);
   }
 
-  &__arrow {
-    font-size: 0.8rem;
-    transition: transform 0.2s ease;
-
-    &--expanded {
-      transform: rotate(180deg);
-    }
+  &__icon {
+    font-size: 1rem;
+    line-height: 1;
   }
 
-  &__items {
-    list-style: none;
-    margin: 0.25rem 0 0 1.25rem;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.2rem;
-    border-left: 1px solid rgba(255, 255, 255, 0.08);
-  }
-
-  &__item-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    width: 100%;
-    background: transparent;
-    border: none;
-    padding: 0.45rem 0.75rem;
-    border-radius: 6px;
-    color: #cbd5e1;
-    font-size: 0.825rem;
-    text-align: left;
-    cursor: pointer;
-    transition: all 0.2s ease;
-
-    &:hover {
-      color: #818cf8;
-      background: rgba(99, 102, 241, 0.08);
-    }
-
-    &--active {
-      color: #a5b4fc;
-      background: rgba(99, 102, 241, 0.18);
-      font-weight: 600;
-
-      .docs-sidebar__item-dot {
-        background: #818cf8;
-        box-shadow: 0 0 8px #818cf8;
-      }
-    }
-  }
-
-  &__item-dot {
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.25);
-    transition: all 0.2s ease;
-  }
-
-  &__item-title {
+  &__title {
+    font-size: 0.85rem;
+    font-weight: 700;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
 
-  &__empty {
-    padding: 1.5rem 0.5rem;
-    text-align: center;
-    font-size: 0.85rem;
-    color: #64748b;
+  &__header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
   }
+
+  &__arrow {
+    font-size: 0.8rem;
+    color: var(--text-muted, #94a3b8);
+    transition: transform 0.2s ease;
+
+    &--open {
+      transform: rotate(180deg);
+    }
+  }
+}
+
+.status-badge {
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 0.1rem 0.35rem;
+  border-radius: 9999px;
+
+  &--done {
+    background: rgba(16, 185, 129, 0.2);
+    color: #34d399;
+  }
+
+  &--progress {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fbbf24;
+  }
+}
+
+/* Tree Leaves (Уроки) */
+.tree-branch {
+  list-style: none;
+  padding: 0.35rem 0 0.35rem 1.25rem;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  position: relative;
+  border-left: 2px dashed var(--border-color, rgba(255, 255, 255, 0.12));
+  margin-left: 1rem;
+}
+
+.tree-leaf {
+  &__btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text-muted, #94a3b8);
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.15s ease;
+
+    &:hover {
+      background: var(--bg-card-hover, rgba(255, 255, 255, 0.06));
+      color: var(--text-main, #ffffff);
+    }
+
+    &--active {
+      background: var(--bg-card-hover, rgba(56, 189, 248, 0.15)) !important;
+      border-color: var(--primary, #38bdf8) !important;
+      color: var(--text-main, #ffffff) !important;
+      font-weight: 700;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
+    }
+
+    &--completed {
+      color: var(--text-main, #e2e8f0);
+    }
+
+    &--locked {
+      opacity: 0.6;
+    }
+  }
+
+  &__code {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--text-muted, #94a3b8);
+    opacity: 0.8;
+  }
+
+  &__title {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__status-icon {
+    font-size: 0.8rem;
+    margin-left: auto;
+  }
+}
+
+.tree-expand-enter-active,
+.tree-expand-leave-active {
+  transition: all 0.2s ease;
+}
+
+.tree-expand-enter-from,
+.tree-expand-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
 }
 </style>

@@ -20,9 +20,33 @@ export interface DocSectionContent {
   }
 }
 
+export interface DocFlashcardData {
+  id: string | number
+  category: string
+  section: string
+  difficulty: 'easy' | 'medium' | 'hard'
+  question: string
+  answer: string
+  hint?: string
+}
+
+export interface DocQuizOption {
+  id: string
+  label: string
+  text: string
+}
+
+export interface DocQuiz {
+  question: string
+  options: DocQuizOption[]
+  correctId: string
+  explanation?: string
+}
+
 export interface DocItem {
   id: string
   categoryId: string
+  code?: string
   title: string
   description: string
   author: {
@@ -36,14 +60,19 @@ export interface DocItem {
   sections: DocSectionContent[]
   usefulCount: number
   notUsefulCount: number
+  status?: 'completed' | 'in-progress' | 'locked'
+  flashcard?: DocFlashcardData
+  quiz?: DocQuiz
 }
 
 export interface DocCategory {
   id: string
+  code?: string
   title: string
   icon: string
   description: string
   items: DocItem[]
+  progressPercent?: number
 }
 
 export interface DocFeedbackPayload {

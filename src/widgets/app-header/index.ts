@@ -1,2 +1,6 @@
+export * from './model/types'
 export * from './model/use-app-header'
 export { default as AppHeader } from './ui/app-header.vue'
+export { default as AppHeaderNav } from './ui/app-header-nav.vue'
+export { default as AppHeaderThemeToggle } from './ui/app-header-theme-toggle.vue'
+export { default as AppHeaderMobile } from './ui/app-header-mobile.vue'
