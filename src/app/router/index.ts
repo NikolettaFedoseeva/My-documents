@@ -8,6 +8,7 @@ import { UiKitPage } from '@/pages/ui-kit'
 import { WorkspacePage } from '@/domains/app-workspace'
 
 import { DocsPage } from '@/pages/docs'
+import { AuthorPage } from '@/pages/author'
 
 const loadRemoteWithFallback = (remoteImporter: () => Promise<any>, fallbackComponent: any) => {
   return defineAsyncComponent({
@@ -36,6 +37,11 @@ const routes: Array<RouteRecordRaw> = [
     path: '/docs',
     name: 'docs',
     component: DocsPage,
+  },
+  {
+    path: '/author',
+    name: 'author',
+    component: AuthorPage,
   },
   {
     path: '/auth',

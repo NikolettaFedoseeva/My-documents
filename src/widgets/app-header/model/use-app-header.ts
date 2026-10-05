@@ -16,6 +16,7 @@ export function useAppHeader() {
   const navLinks: NavLink[] = [
     { title: 'Главная', path: '/' },
     { title: 'Документация', path: '/docs', icon: '📖' },
+    { title: 'Студия автора', path: '/author', icon: '✍️' },
     { title: 'Войти в Кабинет', path: '/auth', icon: '🔑', isHighlight: true },
   ]
   // #endregion Navigation Items

@@ -101,3 +101,5 @@ export interface DocProgressStorageData {
   streakDays: number
   lastActivityDate: string
 }
+
+export * from './dto'

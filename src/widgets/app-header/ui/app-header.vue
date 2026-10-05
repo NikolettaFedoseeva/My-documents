@@ -29,7 +29,7 @@ const {
           <span class="app-header__badge">PRO</span>
         </div>
 
-        <!-- Навигационные ссылки: Главная, Документация -->
+        <!-- Навигационные ссылки: Главная, Документация, Студия автора -->
         <nav class="app-header__nav">
           <button
             type="button"
@@ -49,6 +49,17 @@ const {
           >
             <span class="nav-icon">📖</span>
             <span>Документация</span>
+          </button>
+          <button
+            type="button"
+            class="app-header__nav-link"
+            :class="{
+              'app-header__nav-link--active': currentPath.startsWith('/author'),
+            }"
+            @click="navigateTo('/author')"
+          >
+            <span class="nav-icon">✍️</span>
+            <span>Студия автора</span>
           </button>
         </nav>
       </div>

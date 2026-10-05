@@ -1,315 +1,63 @@
-import { DocCategory, DocItem, DocFeedbackPayload } from '../types'
+import type {
+  DocCategory,
+  DocItem,
+  DocFeedbackPayload,
+  CreateDocDto,
+  UpdateDocDto,
+  CreateCategoryDto,
+  UpdateCategoryDto,
+} from '../types'
+import type { DocRepository } from './doc-repository.interface'
+import { DocLocalRepository } from './doc-local-repository'
 
-const MOCK_CATEGORIES: DocCategory[] = [
-  {
-    id: 'getting-started',
-    code: '01',
-    title: 'Быстрый старт',
-    icon: '🚀',
-    description: 'Основная информация о платформе LERN и начале обучения',
-    progressPercent: 100,
-    items: [
-      {
-        id: 'welcome',
-        categoryId: 'getting-started',
-        code: '01.1',
-        title: 'Добро пожаловать в LERN',
-        description: 'Вводная статья о возможностях интерактивной учебной платформы',
-        status: 'completed',
-        author: {
-          name: 'Алексей Смирнов',
-          avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
-          role: 'Lead Architect',
-        },
-        updatedAt: '2026-08-30',
-        readTimeMinutes: 3,
-        tags: ['Обзор', 'Старт', 'LERN'],
-        usefulCount: 42,
-        notUsefulCount: 1,
-        flashcard: {
-          id: 'fc-01-1',
-          category: 'LERN Codex',
-          section: 'Введение',
-          difficulty: 'easy',
-          question: 'В чём главная идея концепции Bookish Codex в LERN?',
-          answer: 'Слияние академического книжного справочника с 3D-тренажерами памяти Active Recall для глубокого и долгосрочного запоминания.',
-          hint: 'Подумайте об эстетике книги и технике интервального повторения.',
-        },
-        quiz: {
-          question: 'Какой ключевой инструмент используется в LERN для борьбы с забыванием материала?',
-          correctId: 'b',
-          explanation: '3D-карточки Active Recall заставляют мозг активно извлекать информацию из памяти, что укрепляет синаптические связи.',
-          options: [
-            { id: 'a', label: 'A', text: 'Пассивное перечитывание конспекта' },
-            { id: 'b', label: 'B', text: '3D-карточки интервального повторения Active Recall' },
-            { id: 'c', label: 'C', text: 'Просмотр длинных видеолекций на фоне' },
-          ],
-        },
-        sections: [
-          {
-            id: 'about-platform',
-            title: 'Что такое LERN?',
-            level: 2,
-            text: 'LERN — это современная микрофронтенд-платформа интерактивного обучения с подсистемами тренажеров, личным кабинетом ученика и преподавательской аналитикой.',
-            callout: {
-              type: 'tip',
-              message: 'Рекомендуется изучить раздел Архитектуры перед началом разработки своих модулей.',
-            },
-          },
-          {
-            id: 'key-features',
-            title: 'Ключевые возможности',
-            level: 2,
-            text: 'Платформа предоставляет готовые виджеты для отображения курсов, прохождения интерактивных тестов и проверки кода в реальном времени.',
-          },
-          {
-            id: 'quick-example',
-            title: 'Пример структуры модуля',
-            level: 3,
-            text: 'Вот как выглядит базовый шаблон интеграции с экосистемой LERN:',
-            codeSnippet: {
-              language: 'typescript',
-              filename: 'src/app/init.ts',
-              code: `import { createLernApp } from '@lern/core'
-
-export const app = createLernApp({
-  theme: 'codex-navy',
-  features: ['analytics', 'interactive-labs']
-})`,
-            },
-          },
-        ],
-      },
-      {
-        id: 'navigation-guide',
-        categoryId: 'getting-started',
-        code: '01.2',
-        title: 'Навигация по платформе',
-        description: 'Как быстро переключаться между кабинетом, тренажерами и курсами',
-        status: 'completed',
-        author: {
-          name: 'Елена Васильева',
-          avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80',
-          role: 'UX Designer',
-        },
-        updatedAt: '2026-08-28',
-        readTimeMinutes: 4,
-        tags: ['UX', 'Навигация'],
-        usefulCount: 29,
-        notUsefulCount: 0,
-        flashcard: {
-          id: 'fc-01-2',
-          category: 'Навигация',
-          section: 'Интерфейс',
-          difficulty: 'easy',
-          question: 'Как осуществляется переключение между микрофронтендами платформы?',
-          answer: 'Через глобальный хост-маршрутизатор (Host Shell Router) и механизм Webpack Module Federation без полной перезагрузки страницы.',
-        },
-        quiz: {
-          question: 'Какая технология обеспечивает независимую загрузку микрофронтендов?',
-          correctId: 'c',
-          options: [
-            { id: 'a', label: 'A', text: 'iFrame вставки' },
-            { id: 'b', label: 'B', text: 'Серверный рендеринг через Nginx rewrite' },
-            { id: 'c', label: 'C', text: 'Webpack Module Federation' },
-          ],
-        },
-        sections: [
-          {
-            id: 'top-nav',
-            title: 'Верхняя панель навигации',
-            level: 2,
-            text: 'В шапке всегда доступны ключевые переходы: главная страница, документация, личный кабинет ученика и переключатель цветового оформления тем.',
-          },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'architecture',
-    code: '02',
-    title: 'Архитектура и FSD',
-    icon: '⚖️',
-    description: 'Стандарты Feature-Sliced Design, структура модулей и интеграция сервисов',
-    progressPercent: 50,
-    items: [
-      {
-        id: 'fsd-standards',
-        categoryId: 'architecture',
-        code: '02.1',
-        title: 'Стандарты Feature-Sliced Design',
-        description: 'Правила разделения приложения на слои: app, pages, widgets, features, entities, shared',
-        status: 'in-progress',
-        author: {
-          name: 'Алексей Смирнов',
-          avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
-          role: 'Lead Architect',
-        },
-        updatedAt: '2026-09-02',
-        readTimeMinutes: 6,
-        tags: ['FSD', 'Архитектура', 'TypeScript'],
-        usefulCount: 54,
-        notUsefulCount: 2,
-        flashcard: {
-          id: 'fc-02-1',
-          category: 'FSD',
-          section: 'Архитектура',
-          difficulty: 'medium',
-          question: 'Разрешен ли импорт из вышележащих слоев в нижележащие по стандарту FSD?',
-          answer: 'Категорически запрещен. Слой Shared не может импортировать ничего выше себя, Entities знают только о Shared, а Features — о Entities и Shared.',
-          hint: 'Вспомните золотое правило направленности зависимостей FSD.',
-        },
-        quiz: {
-          question: 'Какой слой в FSD инкапсулирует бизнес-сущность предметной области (данные и тип)?',
-          correctId: 'b',
-          options: [
-            { id: 'a', label: 'A', text: 'features' },
-            { id: 'b', label: 'B', text: 'entities' },
-            { id: 'c', label: 'C', text: 'widgets' },
-          ],
-        },
-        sections: [
-          {
-            id: 'layers-hierarchy',
-            title: 'Иерархия слоёв FSD',
-            level: 2,
-            text: 'В проекте строго соблюдается изоляция слоев. Запрещены циклические импорты и импорты сверху вниз.',
-            callout: {
-              type: 'warning',
-              message: 'Компоненты слоя Shared никогда не должны импортировать файлы из Entities или Features.',
-            },
-          },
-          {
-            id: 'public-api',
-            title: 'Публичный API через index.ts',
-            level: 3,
-            text: 'Каждый модуль экспортирует свои наружные интерфейсы и компоненты исключительно через корневой index.ts (barrel export).',
-            codeSnippet: {
-              language: 'typescript',
-              filename: 'src/entities/user/index.ts',
-              code: `export * from './model/types'
-export * from './api/user-api'
-export { default as UserAvatar } from './ui/user-avatar/user-avatar.vue'`,
-            },
-          },
-        ],
-      },
-      {
-        id: 'services-and-adapters',
-        categoryId: 'architecture',
-        code: '02.2',
-        title: 'Слои сервисов и адаптеров',
-        description: 'Преобразование API DTO в UI Model и работа со стейтом',
-        status: 'locked',
-        author: {
-          name: 'Алексей Смирнов',
-          avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
-          role: 'Lead Architect',
-        },
-        updatedAt: '2026-09-01',
-        readTimeMinutes: 5,
-        tags: ['Services', 'Adapters'],
-        usefulCount: 18,
-        notUsefulCount: 0,
-        flashcard: {
-          id: 'fc-02-2',
-          category: 'Архитектура',
-          section: 'Адаптеры',
-          difficulty: 'hard',
-          question: 'Для чего в архитектуре используется слой адаптеров (Adapters)?',
-          answer: 'Адаптеры преобразуют внешние сырые структуры сервера (DTO) во внутренние модели пользовательского интерфейса (UI Models), защищая UI от изменений в API.',
-        },
-        quiz: {
-          question: 'Где должен располагаться адаптер данных сущности?',
-          correctId: 'a',
-          options: [
-            { id: 'a', label: 'A', text: 'Внутри модуля сущности в папке adapters/' },
-            { id: 'b', label: 'B', text: 'Внутри Vue-компонента в теге <template>' },
-            { id: 'c', label: 'C', text: 'В глобальном router/index.ts' },
-          ],
-        },
-        sections: [
-          {
-            id: 'adapter-pattern',
-            title: 'Паттерн Адаптер',
-            level: 2,
-            text: 'Адаптеры гарантируют, что изменение формата ответа бэкенда не сломает весь интерфейс приложения.',
-          },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'active-recall',
-    code: '03',
-    title: 'Реактивность и Обучение',
-    icon: '🧠',
-    description: 'Методика Active Recall, Composition API и интервальное повторение',
-    progressPercent: 0,
-    items: [
-      {
-        id: 'spaced-repetition',
-        categoryId: 'active-recall',
-        code: '03.1',
-        title: 'Механика интервального повторения',
-        description: 'Алгоритм SuperMemo-2 и расчет оптимальных интервалов для карточек',
-        status: 'locked',
-        author: {
-          name: 'Елена Васильева',
-          avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80',
-          role: 'UX Designer',
-        },
-        updatedAt: '2026-08-25',
-        readTimeMinutes: 4,
-        tags: ['Active Recall', 'Память', 'Алгоритмы'],
-        usefulCount: 31,
-        notUsefulCount: 1,
-        flashcard: {
-          id: 'fc-03-1',
-          category: 'Психология памяти',
-          section: 'Интервалы',
-          difficulty: 'medium',
-          question: 'Что описывает кривая забывания Эббингауза?',
-          answer: 'Экспоненциальное угасание памяти во времени, если материал не повторяется через увеличивающиеся промежутки времени.',
-        },
-        quiz: {
-          question: 'Когда наиболее эффективно производить первое повторение нового материала?',
-          correctId: 'b',
-          options: [
-            { id: 'a', label: 'A', text: 'Через месяц' },
-            { id: 'b', label: 'B', text: 'Через 24 часа после первичного изучения' },
-            { id: 'c', label: 'C', text: 'Никогда, если хорошо понял сразу' },
-          ],
-        },
-        sections: [
-          {
-            id: 'ebbinghaus-curve',
-            title: 'Кривая Эббингауза',
-            level: 2,
-            text: 'Без интервального повторения через 72 часа в памяти сохраняется менее 20% изученного материала.',
-          },
-        ],
-      },
-    ],
-  },
-]
+// Экземпляр репозитория базы знаний.
+// В будущем при переходе на бэкенд достаточно подставить:
+// const repository: DocRepository = new DocSupabaseRepository()
+const repository: DocRepository = new DocLocalRepository()
 
 export class DocApiService {
   static async getCategories(): Promise<DocCategory[]> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(JSON.parse(JSON.stringify(MOCK_CATEGORIES)))
-      }, 150)
-    })
+    return repository.getCategories()
   }
 
   static async getDocById(id: string): Promise<DocItem | null> {
-    const all = MOCK_CATEGORIES.flatMap((c) => c.items)
-    const found = all.find((d) => d.id === id) || null
-    return Promise.resolve(found)
+    return repository.getDocById(id)
+  }
+
+  static async createCategory(dto: CreateCategoryDto): Promise<DocCategory> {
+    return repository.createCategory(dto)
+  }
+
+  static async updateCategory(id: string, dto: UpdateCategoryDto): Promise<DocCategory> {
+    return repository.updateCategory(id, dto)
+  }
+
+  static async deleteCategory(id: string): Promise<void> {
+    return repository.deleteCategory(id)
+  }
+
+  static async createDoc(dto: CreateDocDto): Promise<DocItem> {
+    return repository.createDoc(dto)
+  }
+
+  static async updateDoc(id: string, dto: UpdateDocDto): Promise<DocItem> {
+    return repository.updateDoc(id, dto)
+  }
+
+  static async deleteDoc(id: string): Promise<void> {
+    return repository.deleteDoc(id)
+  }
+
+  static async resetToDefaults(): Promise<DocCategory[]> {
+    return repository.resetToDefaults()
   }
 
   static async submitFeedback(payload: DocFeedbackPayload): Promise<{ success: boolean }> {
     return Promise.resolve({ success: true })
   }
 }
+
+export { repository as docRepository }
+export * from './doc-repository.interface'
+export * from './doc-local-repository'
+export * from './mock-data'
