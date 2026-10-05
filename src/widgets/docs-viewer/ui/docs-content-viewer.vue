@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { DocItem, DocBadge, DocCodeBlock, DocAdapter } from '@/entities/doc'
+import { computed } from 'vue'
+import { DocItem, DocBadge, DocCodeBlock, DocAdapter, useDocProgressStore } from '@/entities/doc'
 import { RateDocWidget } from '@/features/rate-doc'
 import DocsStudyDeck from './docs-study-deck.vue'
 
@@ -24,6 +25,22 @@ const emit = defineEmits<{
   (e: 'selectDoc', docId: string): void
 }>()
 // #endregion defineEmits
+
+const progressStore = useDocProgressStore()
+
+// #region computed
+const isCompleted = computed<boolean>(() => {
+  if (!props.doc) return false
+  return progressStore.isCompleted(props.doc.id)
+})
+// #endregion computed
+
+// #region Функции
+const onToggleComplete = (): void => {
+  if (!props.doc) return
+  progressStore.toggleCompleteDoc(props.doc.id)
+}
+// #endregion Функции
 </script>
 
 <template>
@@ -110,6 +127,31 @@ const emit = defineEmits<{
       <!-- Встроенный тренажер самопроверки для мобилок и планшетов (под текстом) -->
       <div v-if="props.showInlineStudyDeck" class="codex-sheet__inline-deck">
         <DocsStudyDeck :doc="props.doc" />
+      </div>
+
+      <!-- Интерактивное подтверждение завершения главы -->
+      <div class="codex-complete-action">
+        <div class="codex-complete-action__info">
+          <span class="codex-complete-action__icon">{{ isCompleted ? '🏆' : '📖' }}</span>
+          <div>
+            <h4 class="codex-complete-action__title">
+              {{ isCompleted ? 'Глава отмечена как изученная!' : 'Завершили чтение этой главы?' }}
+            </h4>
+            <p class="codex-complete-action__subtitle">
+              {{ isCompleted ? 'Вы закрепили материал и получили +50 XP в Карту Знаний' : 'Зафиксируйте прогресс изучения и пополните копилку опыта на +50 XP' }}
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          class="codex-complete-btn"
+          :class="{ 'codex-complete-btn--completed': isCompleted }"
+          @click="onToggleComplete"
+        >
+          <span class="btn-check-icon">{{ isCompleted ? '✓' : '○' }}</span>
+          <span>{{ isCompleted ? 'Изучено (+50 XP)' : 'Отметить изученной (+50 XP)' }}</span>
+        </button>
       </div>
 
       <!-- Навигация: Предыдущая / Следующая глава -->
@@ -351,6 +393,87 @@ const emit = defineEmits<{
     background: rgba(56, 189, 248, 0.12);
     border: 1px solid rgba(56, 189, 248, 0.3);
     color: #075985;
+  }
+}
+
+/* Completion Action Banner */
+.codex-complete-action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: var(--radius-md, 14px);
+  background: var(--bg-card-hover, rgba(0, 0, 0, 0.04));
+  border: 1px dashed var(--border-color, rgba(0, 0, 0, 0.15));
+  margin: 1rem 0;
+
+  @media (max-width: 640px) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  &__info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  &__icon {
+    font-size: 2rem;
+    line-height: 1;
+  }
+
+  &__title {
+    font-size: 1.02rem;
+    font-weight: 700;
+    margin: 0 0 0.25rem;
+    color: var(--text-main, #1e293b);
+  }
+
+  &__subtitle {
+    font-size: 0.82rem;
+    color: var(--text-muted, #64748b);
+    margin: 0;
+  }
+
+  .codex-complete-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.4rem;
+    border-radius: 9999px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    background: var(--primary, #6366f1);
+    color: #ffffff;
+    border: none;
+    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(99, 102, 241, 0.45);
+    }
+
+    &--completed {
+      background: rgba(16, 185, 129, 0.15);
+      color: #059669;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      box-shadow: none;
+
+      &:hover {
+        background: rgba(16, 185, 129, 0.25);
+        color: #047857;
+      }
+    }
+
+    .btn-check-icon {
+      font-size: 1rem;
+      font-weight: 800;
+    }
   }
 }
 

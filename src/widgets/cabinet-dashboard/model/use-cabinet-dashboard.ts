@@ -1,10 +1,13 @@
 import { ref, onMounted } from 'vue'
 import { Course, AssignmentItem, Achievement, UserCabinetStats, CourseApiService } from '@/entities/course'
 import { User, UserApiService } from '@/entities/user'
+import { useDocProgressStore } from '@/entities/doc'
 
 export type CabinetTab = 'courses' | 'assignments' | 'achievements' | 'settings'
 
 export function useCabinetDashboard() {
+  const progressStore = useDocProgressStore()
+
   // #region refs
   const activeTab = ref<CabinetTab>('courses')
   const user = ref<User | null>(null)
@@ -28,7 +31,17 @@ export function useCabinetDashboard() {
       ])
 
       user.value = userData
+      if (user.value) {
+        user.value.xp = (user.value.xp || 0) + progressStore.totalXp
+        user.value.level = progressStore.userLevel
+      }
+
       stats.value = statsData
+      if (stats.value) {
+        stats.value.streakDays = Math.max(stats.value.streakDays, progressStore.streakDays)
+        stats.value.completedLessonsCount += progressStore.completedChaptersCount
+      }
+
       courses.value = coursesData
       assignments.value = assignmentsData
       achievements.value = achievementsData

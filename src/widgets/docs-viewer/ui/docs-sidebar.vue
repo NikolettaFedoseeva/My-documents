@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import type { DocCategory } from '@/entities/doc'
+import { computed } from 'vue'
+import { useDocProgressStore, type DocCategory, type DocItem } from '@/entities/doc'
 
 // #region defineProps
 interface Props {
@@ -19,6 +20,36 @@ const emit = defineEmits<{
   (e: 'update:searchQuery', query: string): void
 }>()
 // #endregion defineEmits
+
+const progressStore = useDocProgressStore()
+
+// #region computed
+const allItems = computed<DocItem[]>(() => {
+  return props.categories.flatMap((cat) => cat.items)
+})
+
+const totalItemsCount = computed<number>(() => {
+  return allItems.value.length
+})
+
+const completedItemsCount = computed<number>(() => {
+  return allItems.value.filter((item) => progressStore.isCompleted(item.id)).length
+})
+
+const overallProgressPercent = computed<number>(() => {
+  if (totalItemsCount.value === 0) return 0
+  return Math.round((completedItemsCount.value / totalItemsCount.value) * 100)
+})
+
+const getCategoryPercent = (category: DocCategory): number => {
+  const ids = category.items.map((i) => i.id)
+  return progressStore.getCategoryProgress(ids)
+}
+
+const isDocDone = (item: DocItem): boolean => {
+  return progressStore.isCompleted(item.id) || item.status === 'completed'
+}
+// #endregion computed
 
 // #region Функции
 const onInputSearch = (event: Event): void => {
@@ -40,6 +71,22 @@ const onInputSearch = (event: Event): void => {
         class="docs-sidebar__search-input"
         @input="onInputSearch"
       />
+    </div>
+
+    <!-- Академический прогресс-виджет курса -->
+    <div class="docs-sidebar__progress-summary">
+      <div class="progress-meta">
+        <span class="progress-label">ПРОГРЕСС ИЗУЧЕНИЯ</span>
+        <span class="progress-digits">{{ completedItemsCount }} / {{ totalItemsCount }} ({{ overallProgressPercent }}%)</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-bar" :style="{ width: overallProgressPercent + '%' }"></div>
+      </div>
+      <div class="progress-chips">
+        <span class="progress-chip xp-chip" title="Общий накопленный опыт">⚡ {{ progressStore.totalXp }} XP</span>
+        <span class="progress-chip level-chip" title="Текущий уровень">⭐ Ур. {{ progressStore.userLevel }}</span>
+        <span class="progress-chip streak-chip" title="Дней активности подряд">🔥 {{ progressStore.streakDays }} дн.</span>
+      </div>
     </div>
 
     <!-- Заголовок карты знаний -->
@@ -68,9 +115,9 @@ const onInputSearch = (event: Event): void => {
           </div>
 
           <div class="tree-node__header-right">
-            <span v-if="category.progressPercent === 100" class="status-badge status-badge--done">✓</span>
-            <span v-else-if="category.progressPercent && category.progressPercent > 0" class="status-badge status-badge--progress">
-              {{ category.progressPercent }}%
+            <span v-if="getCategoryPercent(category) === 100" class="status-badge status-badge--done">✓</span>
+            <span v-else-if="getCategoryPercent(category) > 0" class="status-badge status-badge--progress">
+              {{ getCategoryPercent(category) }}%
             </span>
             <span
               class="tree-node__arrow"
@@ -97,7 +144,7 @@ const onInputSearch = (event: Event): void => {
                 class="tree-leaf__btn"
                 :class="{
                   'tree-leaf__btn--active': props.activeDocId === item.id,
-                  'tree-leaf__btn--completed': item.status === 'completed',
+                  'tree-leaf__btn--completed': isDocDone(item),
                   'tree-leaf__btn--locked': item.status === 'locked',
                 }"
                 @click="emit('selectDoc', item.id)"
@@ -111,7 +158,7 @@ const onInputSearch = (event: Event): void => {
                 <span class="tree-leaf__title">{{ item.title }}</span>
 
                 <span class="tree-leaf__status-icon">
-                  <span v-if="item.status === 'completed'" title="Изучено">✓</span>
+                  <span v-if="isDocDone(item)" class="status-icon--done" title="Изучено">✓</span>
                   <span v-else-if="props.activeDocId === item.id" title="Текущий урок">🔥</span>
                   <span v-else-if="item.status === 'locked'" title="Заблокировано">🔒</span>
                 </span>
@@ -123,6 +170,7 @@ const onInputSearch = (event: Event): void => {
     </nav>
   </aside>
 </template>
+
 
 <style scoped lang="scss">
 .docs-sidebar {
@@ -171,6 +219,88 @@ const onInputSearch = (event: Event): void => {
     &::placeholder {
       color: var(--text-muted, #94a3b8);
       font-size: 0.82rem;
+    }
+  }
+
+  &__progress-summary {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.85) 100%);
+    border: 1px solid var(--border-color, rgba(255, 255, 255, 0.12));
+    border-radius: var(--radius-sm, 12px);
+    padding: 0.85rem 0.95rem;
+    margin-bottom: 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+
+    .progress-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+    .progress-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: var(--text-muted, #94a3b8);
+      text-transform: uppercase;
+    }
+
+    .progress-digits {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--primary, #818cf8);
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 9999px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #6366f1 0%, #a855f7 50%, #34d399 100%);
+      border-radius: 9999px;
+      transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .progress-chips {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.35rem;
+      padding-top: 0.25rem;
+    }
+
+    .progress-chip {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 0.2rem 0.45rem;
+      border-radius: 6px;
+      white-space: nowrap;
+
+      &.xp-chip {
+        background: rgba(234, 179, 8, 0.15);
+        color: #facc15;
+        border: 1px solid rgba(234, 179, 8, 0.3);
+      }
+
+      &.level-chip {
+        background: rgba(99, 102, 241, 0.15);
+        color: #a5b4fc;
+        border: 1px solid rgba(99, 102, 241, 0.3);
+      }
+
+      &.streak-chip {
+        background: rgba(239, 68, 68, 0.15);
+        color: #f87171;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+      }
     }
   }
 
@@ -362,6 +492,12 @@ const onInputSearch = (event: Event): void => {
   &__status-icon {
     font-size: 0.8rem;
     margin-left: auto;
+
+    .status-icon--done {
+      color: #34d399;
+      font-weight: 800;
+      text-shadow: 0 0 8px rgba(52, 211, 153, 0.5);
+    }
   }
 }
 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed } from 'vue'
 import { InteractiveFlashcard, UiQuestion } from 'lern-ui-kit'
-import type { DocItem } from '@/entities/doc'
+import { useDocProgressStore, type DocItem } from '@/entities/doc'
 
 // #region defineProps
 interface Props {
@@ -11,33 +11,44 @@ interface Props {
 const props = defineProps<Props>()
 // #endregion defineProps
 
-// #region refs
-const selectedAnswerId = ref<string | null>(null)
-const isSubmitted = ref<boolean>(false)
-const isCardMastered = ref<boolean>(false)
-// #endregion refs
+const progressStore = useDocProgressStore()
 
-// #region watch
-watch(
-  () => props.doc?.id,
-  () => {
-    selectedAnswerId.value = null
-    isSubmitted.value = false
-    isCardMastered.value = false
-  }
-)
-// #endregion watch
+// #region computed
+const isCardMastered = computed<boolean>(() => {
+  if (!props.doc) return false
+  return progressStore.isFlashcardMastered(props.doc.id)
+})
+
+const selectedAnswerId = computed<string | null>(() => {
+  if (!props.doc) return null
+  return progressStore.getQuizAnswer(props.doc.id)
+})
+
+const isSubmitted = computed<boolean>(() => {
+  return selectedAnswerId.value !== null
+})
+
+const isDocCompleted = computed<boolean>(() => {
+  if (!props.doc) return false
+  return progressStore.isCompleted(props.doc.id)
+})
+// #endregion computed
 
 // #region Функции
 const onSelectAnswer = (optionId: string): void => {
-  selectedAnswerId.value = optionId
-  isSubmitted.value = true
+  if (!props.doc?.quiz) return
+  const isCorrect = optionId === props.doc.quiz.correctId
+  progressStore.submitQuiz(props.doc.id, optionId, isCorrect)
 }
 
 const onRateFlashcard = (payload: { id: string | number; rating: 'know' | 'doubt' | 'repeat' }): void => {
-  if (payload.rating === 'know') {
-    isCardMastered.value = true
-  }
+  if (!props.doc) return
+  progressStore.rateFlashcard(props.doc.id, payload.rating)
+}
+
+const onToggleComplete = (): void => {
+  if (!props.doc) return
+  progressStore.toggleCompleteDoc(props.doc.id)
 }
 // #endregion Функции
 </script>
@@ -52,12 +63,28 @@ const onRateFlashcard = (payload: { id: string | number; rating: 'know' | 'doubt
           <p class="docs-study-deck__subtitle">Тренажёр самопроверки</p>
         </div>
       </div>
-      <span v-if="isCardMastered" class="docs-study-deck__badge docs-study-deck__badge--success">
-        ✓ Запомнил (+50 XP)
-      </span>
-      <span v-else class="docs-study-deck__badge">
-        Active Recall
-      </span>
+
+      <div class="docs-study-deck__xp-badge" title="Заработанный опыт">
+        <span class="xp-icon">⚡</span>
+        <span class="xp-value">{{ progressStore.totalXp }} XP</span>
+      </div>
+    </div>
+
+    <!-- Индикатор статуса главы -->
+    <div
+      class="chapter-status-bar"
+      :class="{ 'chapter-status-bar--completed': isDocCompleted }"
+      @click="onToggleComplete"
+    >
+      <div class="chapter-status-bar__left">
+        <span class="status-icon">{{ isDocCompleted ? '✓' : '📖' }}</span>
+        <span class="status-text">
+          {{ isDocCompleted ? 'Глава изучена (+50 XP)' : 'В процессе изучения' }}
+        </span>
+      </div>
+      <button type="button" class="status-toggle-btn">
+        {{ isDocCompleted ? 'Снять отметку' : 'Отметить ✓' }}
+      </button>
     </div>
 
     <!-- 1. 3D-Флешкарта -->
@@ -144,6 +171,90 @@ const onRateFlashcard = (payload: { id: string | number; rating: 'know' | 'doubt
     font-size: 0.75rem;
     color: var(--text-muted, #94a3b8);
     margin: 0;
+  }
+
+  &__xp-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.65rem;
+    border-radius: 9999px;
+    background: linear-gradient(135deg, rgba(234, 179, 8, 0.15) 0%, rgba(245, 158, 11, 0.25) 100%);
+    border: 1px solid rgba(234, 179, 8, 0.4);
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.15);
+
+    .xp-icon {
+      font-size: 0.85rem;
+      animation: pulse 2s infinite ease-in-out;
+    }
+
+    .xp-value {
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: #facc15;
+      letter-spacing: 0.02em;
+    }
+  }
+
+  .chapter-status-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.65rem 0.85rem;
+    border-radius: var(--radius-sm, 10px);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px dashed var(--border-color, rgba(255, 255, 255, 0.12));
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.07);
+      border-color: var(--primary, #6366f1);
+    }
+
+    &--completed {
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+
+      .status-icon {
+        color: #34d399;
+      }
+
+      .status-text {
+        color: #34d399;
+        font-weight: 600;
+      }
+    }
+
+    &__left {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .status-icon {
+      font-size: 0.9rem;
+    }
+
+    .status-text {
+      font-size: 0.8rem;
+      color: var(--text-main, #ffffff);
+    }
+
+    .status-toggle-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted, #94a3b8);
+      font-size: 0.72rem;
+      cursor: pointer;
+      text-decoration: underline;
+      padding: 0;
+
+      &:hover {
+        color: var(--text-main, #ffffff);
+      }
+    }
   }
 
   &__badge {

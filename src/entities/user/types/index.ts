@@ -9,6 +9,8 @@ export interface User {
   role: UserRole
   status: UserStatus
   unreadNotificationsCount: number
+  xp?: number
+  level?: number
 }
 
 export interface NotificationItem {

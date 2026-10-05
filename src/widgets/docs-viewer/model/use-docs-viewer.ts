@@ -1,7 +1,9 @@
 import { ref, computed, onMounted } from 'vue'
-import { DocCategory, DocItem, DocApiService, DocAdapter, DocTocItem } from '@/entities/doc'
+import { DocCategory, DocItem, DocApiService, DocAdapter, DocTocItem, useDocProgressStore } from '@/entities/doc'
 
 export function useDocsViewer() {
+  const progressStore = useDocProgressStore()
+
   // #region refs
   const categories = ref<DocCategory[]>([])
   const activeDocId = ref<string>('')
@@ -83,10 +85,20 @@ export function useDocsViewer() {
       const data = await DocApiService.getCategories()
       categories.value = data
 
-      // По умолчанию раскрываем все категории и выбираем первую статью
+      // По умолчанию раскрываем все категории
       data.forEach((cat) => expandedCategoryIds.value.add(cat.id))
-      if (data.length > 0 && data[0].items.length > 0) {
+
+      // Восстанавливаем последний активный документ из сохраненного прогресса
+      const savedLastDocId = progressStore.lastActiveDocId
+      const allItems = data.flatMap((c) => c.items)
+      if (savedLastDocId && allItems.some((d) => d.id === savedLastDocId)) {
+        activeDocId.value = savedLastDocId
+      } else if (data.length > 0 && data[0].items.length > 0) {
         activeDocId.value = data[0].items[0].id
+      }
+
+      if (activeDocId.value) {
+        progressStore.visitDoc(activeDocId.value)
       }
     } catch (err) {
       console.error('Ошибка загрузки документации:', err)
@@ -98,6 +110,7 @@ export function useDocsViewer() {
 
   const selectDoc = (docId: string): void => {
     activeDocId.value = docId
+    progressStore.visitDoc(docId)
     isTreeDrawerOpen.value = false
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
@@ -153,5 +166,6 @@ export function useDocsViewer() {
     setActiveToc,
     toggleTreeDrawer,
     closeTreeDrawer,
+    progressStore,
   }
 }

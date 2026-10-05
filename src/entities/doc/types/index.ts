@@ -79,3 +79,25 @@ export interface DocFeedbackPayload {
   docId: string
   isUseful: boolean
 }
+
+export type DocStatus = 'completed' | 'in-progress' | 'locked'
+
+export interface DocChapterProgress {
+  docId: string
+  status: DocStatus
+  isRead: boolean
+  flashcardMastered: boolean
+  quizCompleted: boolean
+  selectedQuizAnswerId: string | null
+  lastVisitedAt: number
+}
+
+export interface DocProgressStorageData {
+  version: number
+  chapters: Record<string, DocChapterProgress>
+  totalXp: number
+  lastActiveDocId: string | null
+  completedDocIds: string[]
+  streakDays: number
+  lastActivityDate: string
+}
