@@ -1,14 +1,19 @@
 <script setup lang="ts">
+import { ref } from "vue";
 import { useAppHeader } from "../model/use-app-header";
 import AppHeaderThemeToggle from "./app-header-theme-toggle.vue";
 import AppHeaderMobile from "./app-header-mobile.vue";
 import AppHeaderRoleSwitcher from "./app-header-role-switcher.vue";
 import { useUserSessionStore } from "@/entities/user";
 import { useCommandPalette } from "@/features/command-palette";
+import { useNotificationStore } from "@/entities/notification";
+import { NotificationPopover } from "@/features/notification-center";
 
 // #region composable
 const sessionStore = useUserSessionStore();
+const notificationStore = useNotificationStore();
 const { open: openCommandPalette } = useCommandPalette();
+const isNotifOpen = ref<boolean>(false);
 
 const {
   navLinks,
@@ -111,6 +116,30 @@ const {
           <span class="search-trigger__label">Поиск</span>
           <kbd class="search-trigger__kbd">Ctrl K</kbd>
         </button>
+
+        <!-- Колокольчик Центра Уведомлений -->
+        <div class="app-header__notif-wrap">
+          <button
+            type="button"
+            class="app-header__notif-trigger"
+            :class="{ 'app-header__notif-trigger--has-unread': notificationStore.unreadCount > 0 }"
+            title="Центр уведомлений"
+            @click="isNotifOpen = !isNotifOpen"
+          >
+            <span class="notif-trigger__icon">🔔</span>
+            <span
+              v-if="notificationStore.unreadCount > 0"
+              class="notif-trigger__badge"
+            >
+              {{ notificationStore.unreadCount }}
+            </span>
+          </button>
+
+          <NotificationPopover
+            v-model="isNotifOpen"
+            @close="isNotifOpen = false"
+          />
+        </div>
 
         <!-- 1. Интерактивный переключатель роли (RBAC) -->
         <AppHeaderRoleSwitcher />
@@ -350,6 +379,64 @@ const {
       }
     }
   }
+
+  &__notif-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  &__notif-trigger {
+    position: relative;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--text-muted, #94a3b8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(99, 102, 241, 0.4);
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+
+    &--has-unread {
+      border-color: rgba(99, 102, 241, 0.4);
+      background: rgba(99, 102, 241, 0.1);
+      color: #a5b4fc;
+    }
+
+    .notif-trigger__icon {
+      font-size: 1rem;
+    }
+
+    .notif-trigger__badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      background: #ef4444;
+      color: #ffffff;
+      font-size: 0.65rem;
+      font-weight: 800;
+      min-width: 17px;
+      height: 17px;
+      padding: 0 4px;
+      border-radius: 9999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 10px rgba(239, 68, 68, 0.8);
+      border: 2px solid #0f172a;
+    }
+  }
+
 
   &__auth-btn {
     display: inline-flex;

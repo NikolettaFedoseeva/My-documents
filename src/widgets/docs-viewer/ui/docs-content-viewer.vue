@@ -10,6 +10,8 @@ import {
   useDocNotesStore,
 } from '@/entities/doc'
 import { RateDocWidget } from '@/features/rate-doc'
+import { useCodePlayground } from '@/features/code-playground'
+import { useNotificationStore } from '@/entities/notification'
 import DocsStudyDeck from './docs-study-deck.vue'
 
 // #region defineProps
@@ -38,6 +40,8 @@ const emit = defineEmits<{
 
 const progressStore = useDocProgressStore()
 const notesStore = useDocNotesStore()
+const playground = useCodePlayground()
+const notificationStore = useNotificationStore()
 
 // #region notes and bookmarks
 const isBookmarked = computed<boolean>(() => {
@@ -56,11 +60,20 @@ const selectedColor = ref<'amber' | 'cyan' | 'emerald' | 'purple'>('amber')
 
 const onToggleBookmark = (): void => {
   if (!props.doc) return
+  const wasBookmarked = isBookmarked.value
   const courseInfo = props.course || { id: 'all', slug: 'all', title: 'Курс LERN' }
   notesStore.toggleBookmark(
     { id: props.doc.id, title: props.doc.title, code: props.doc.code },
     courseInfo
   )
+
+  if (!wasBookmarked) {
+    notificationStore.addToast({
+      title: 'Закладка сохранена 🔖',
+      message: `Глава «${props.doc.title}» добавлена в ваши сохраненные материалы`,
+      type: 'info',
+    })
+  }
 }
 
 const onSaveNote = (): void => {
@@ -72,6 +85,12 @@ const onSaveNote = (): void => {
   })
   newNoteText.value = ''
   isAddingNote.value = false
+
+  notificationStore.addToast({
+    title: 'Заметка зафиксирована ✍️',
+    message: 'Заметка на полях книги сохранена',
+    type: 'success',
+  })
 }
 // #endregion notes and bookmarks
 
@@ -85,7 +104,17 @@ const isCompleted = computed<boolean>(() => {
 // #region Функции
 const onToggleComplete = (): void => {
   if (!props.doc) return
+  const wasCompleted = isCompleted.value
   progressStore.toggleCompleteDoc(props.doc.id)
+
+  if (!wasCompleted) {
+    notificationStore.addNotification({
+      title: 'Глава завершена! 🎓',
+      message: `Вы успешно завершили главу «${props.doc.title}». +50 XP начислено!`,
+      type: 'achievement',
+      link: '/cabinet',
+    })
+  }
 }
 // #endregion Функции
 </script>
@@ -181,6 +210,11 @@ const onToggleComplete = (): void => {
             :code="section.codeSnippet.code"
             :language="section.codeSnippet.language"
             :filename="section.codeSnippet.filename"
+            @run="() => playground.open({
+              code: section.codeSnippet!.code,
+              filename: section.codeSnippet?.filename,
+              language: section.codeSnippet?.language,
+            })"
           />
         </section>
       </div>

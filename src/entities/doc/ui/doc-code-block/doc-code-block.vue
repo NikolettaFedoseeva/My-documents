@@ -14,6 +14,12 @@ const props = withDefaults(defineProps<Props>(), {
 })
 // #endregion defineProps
 
+// #region defineEmits
+const emit = defineEmits<{
+  (e: 'run', code: string): void
+}>()
+// #endregion defineEmits
+
 // #region refs
 const isCopied = ref<boolean>(false)
 // #endregion refs
@@ -30,6 +36,10 @@ const copyCode = async (): Promise<void> => {
     console.error('Ошибка копирования в буфер обмена:', err)
   }
 }
+
+const openPlayground = (): void => {
+  emit('run', props.code)
+}
 // #endregion Функции
 </script>
 
@@ -41,15 +51,26 @@ const copyCode = async (): Promise<void> => {
         <span v-if="props.filename" class="doc-code-block__file">{{ props.filename }}</span>
       </div>
 
-      <button
-        type="button"
-        class="doc-code-block__copy-btn"
-        :class="{ 'doc-code-block__copy-btn--copied': isCopied }"
-        @click="copyCode"
-      >
-        <span v-if="isCopied">✓ Скопировано</span>
-        <span v-else>📋 Копировать</span>
-      </button>
+      <div class="doc-code-block__actions">
+        <button
+          type="button"
+          class="doc-code-block__run-btn"
+          title="Запустить и протестировать в интерактивной песочнице"
+          @click="openPlayground"
+        >
+          <span>▶ Песочница</span>
+        </button>
+
+        <button
+          type="button"
+          class="doc-code-block__copy-btn"
+          :class="{ 'doc-code-block__copy-btn--copied': isCopied }"
+          @click="copyCode"
+        >
+          <span v-if="isCopied">✓ Скопировано</span>
+          <span v-else>📋 Копировать</span>
+        </button>
+      </div>
     </div>
 
     <pre class="doc-code-block__content"><code>{{ props.code }}</code></pre>
@@ -93,6 +114,34 @@ const copyCode = async (): Promise<void> => {
     font-size: 0.8rem;
     color: #94a3b8;
     font-family: monospace;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__run-btn {
+    background: rgba(99, 102, 241, 0.15);
+    border: 1px solid rgba(99, 102, 241, 0.35);
+    color: #a5b4fc;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.35rem 0.75rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+
+    &:hover {
+      background: rgba(99, 102, 241, 0.25);
+      border-color: rgba(99, 102, 241, 0.6);
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
   }
 
   &__copy-btn {

@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { InteractiveFlashcard, UiQuestion } from 'lern-ui-kit'
 import { DocCodeBlock, DocBadge, type DocItem } from '@/entities/doc'
+import { useCodePlayground } from '@/features/code-playground'
 
 // #region defineProps
 interface Props {
@@ -10,6 +11,8 @@ interface Props {
 
 const props = defineProps<Props>()
 // #endregion defineProps
+
+const playground = useCodePlayground()
 
 // #region refs
 const previewQuizAnswer = ref<string | null>(null)
@@ -86,6 +89,11 @@ const onRateFlashcard = (): void => {
                 :code="sec.codeSnippet.code"
                 :language="sec.codeSnippet.language"
                 :filename="sec.codeSnippet.filename"
+                @run="() => playground.open({
+                  code: sec.codeSnippet!.code,
+                  filename: sec.codeSnippet?.filename,
+                  language: sec.codeSnippet?.language,
+                })"
               />
             </div>
 

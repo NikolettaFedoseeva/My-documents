@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { AppHeader } from '@/widgets/app-header'
 import { CommandPaletteModal } from '@/features/command-palette'
+import { ToastContainer } from '@/features/notification-center'
+import { CodePlaygroundModal, useCodePlayground } from '@/features/code-playground'
+
+const playground = useCodePlayground()
 </script>
 
 <template>
@@ -8,8 +12,19 @@ import { CommandPaletteModal } from '@/features/command-palette'
     <!-- Сквозной FSD Хедер платформы LERN -->
     <AppHeader />
 
+    <!-- Плавающие тост-уведомления платформы -->
+    <ToastContainer />
+
     <!-- Глобальная палитра команд и поиск (Ctrl+K) -->
     <CommandPaletteModal />
+
+    <!-- Интерактивная песочница кода -->
+    <CodePlaygroundModal
+      v-model="playground.isOpen.value"
+      :initial-code="playground.code.value"
+      :filename="playground.filename.value"
+      :language="playground.language.value"
+    />
 
     <!-- Main Viewport -->
     <main class="shell-content">

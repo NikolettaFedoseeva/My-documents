@@ -648,9 +648,55 @@
 
 ---
 
+### [2026-10-08] — Этап 18: Интерактивная веб-песочница кода, Центр уведомлений и Сквозные Unit-тесты 💻 🔔 🧪 ⭐
+
+#### 🎯 Цель:
+Реализовать пакет из трех ключевых систем платформы LERN:
+1. Интерактивная веб-песочница кода в статьях справочника и конструкторе автора.
+2. Центр уведомлений с плавающими тостами и выпадающим списком событий в шапке.
+3. Покрытие ключевой бизнес-логики, сервисов и адаптеров сквозными unit-тестами на Jest.
+
+#### 🧠 Архитектурные решения (FSD, Vue 3, Pinia & Jest):
+1. **Интерактивная песочница кода (`src/features/code-playground`)**:
+   - `useCodeRunner`: безопасный in-browser runner JavaScript/TypeScript сниппетов. Включает регулярный стриппер типов `stripTsTypes` (интерфейсы, алиасы типов, дженерики, аннотации аргументов/переменных), перехват консоли (`console.log`, `info`, `warn`, `error`), возвращение вычисленных выражений и замер скорости выполнения `performance.now()`.
+   - `CodePlaygroundModal`: полноэкранное модальное окно со сплит-панелью (редактор кода с номерами строк, поддержкой Tab и горячей клавишей `Ctrl + Enter` / `Cmd + Enter`, и терминал вывода с цветовой дифференциацией типов логов и кнопкой очистки).
+   - Интеграция: кнопка «▶ Песочница» добавлена в `DocCodeBlock` и проброшена в `DocsContentViewer` и `AuthorPreview`. Глобальный монтинг в `App.vue` через `useCodePlayground`.
+2. **Центр уведомлений и тосты (`entities/notification` & `features/notification-center`)**:
+   - `useNotificationStore`: реактивный стор на Pinia с хранением списка уведомлений, всплывающих тостов, счетчика непрочитанных (`unreadCount`) и персистентностью в `localStorage` (`lern_notifications_v1`).
+   - `ToastContainer`: плавающий слой тостов в правом верхнем углу экрана (`App.vue`) с анимацией появления/исчезновения, индикаторами успеха/ошибки/инфо и таймером авто-закрытия.
+   - `NotificationPopover`: прикреплен к колокольчику 🔔 в шапке `AppHeader`. Включает фильтры («Все» / «Непрочитанные»), кнопки массовых действий («✓ Все прочитаны», «Очистить все») и навигацию по клику.
+   - Связка с действиями пользователя: сохранение закладок, добавление заметок на полях и завершение учебных глав теперь моментально вызывают всплывающие тосты и системные уведомления.
+3. **Сквозные Unit-тесты (`tests/unit/` + Jest)**:
+   - Сконфигурирован `jest.config.js` с `ts-jest` и `jest-environment-jsdom`.
+   - `tests/unit/adapters/course-transfer.spec.ts`: 5 тестов валидации схемы курса, парсинга бэкапов и детекции коллизий.
+   - `tests/unit/services/code-runner.spec.ts`: 7 тестов стриппинга типов TS, перехвата `console.log`, возвращаемых значений и runtime ошибок.
+   - `tests/unit/stores/notification-store.spec.ts`: 5 тестов добавления уведомлений, тостов, счетчиков и очистки.
+   - `tests/unit/stores/doc-progress-store.spec.ts`: 5 тестов отметки завершения глав, начисления XP, пересчета уровней, освоения карточек Active Recall и квизов с изолированным моком сетевого API.
+   - Все **22 unit-теста** успешно проходят (`100% pass`).
+
+#### 📁 Затронутые и созданные файлы:
+- `src/features/code-playground/*` — типы, `useCodeRunner`, `CodePlaygroundModal`, barrel-экспорт.
+- `src/entities/doc/ui/doc-code-block/doc-code-block.vue` — кнопка «▶ Песочница» и `emit('run')`.
+- `src/widgets/docs-viewer/ui/docs-content-viewer.vue` — запуск песочницы и вызов тостов.
+- `src/widgets/author-studio/ui/author-preview.vue` — запуск песочницы из live-preview.
+- `src/entities/notification/*` — типы, Pinia-стор `useNotificationStore`, barrel-экспорт.
+- `src/features/notification-center/*` — `ToastContainer`, `NotificationPopover`, barrel-экспорт.
+- `src/widgets/app-header/ui/app-header.vue` — колокольчик уведомлений с бейджем и поповером.
+- `src/app/App.vue` — глобальное монтирование `ToastContainer` и `CodePlaygroundModal`.
+- `jest.config.js` & `package.json` — конфигурация Jest и скрипт `test:unit`.
+- `tests/unit/mocks/ui-kit-mock.ts` — заглушка UI Kit для тестов.
+- `tests/unit/adapters/course-transfer.spec.ts` — тесты импорта/экспорта курсов.
+- `tests/unit/services/code-runner.spec.ts` — тесты песочницы и транспиляции.
+- `tests/unit/stores/notification-store.spec.ts` — тесты стора уведомлений.
+- `tests/unit/stores/doc-progress-store.spec.ts` — тесты стора прогресса.
+- `docs/tasks.md` & `docs/worklog.md` — актуализация документации.
+
+---
+
 ## 🔮 Следующие шаги:
-1. **Экспорт аналитического PDF-сертификата о прохождении курса**.
-2. **Финальная полировка и релиз версии 1.0.0**.
+1. **Экспорт академического PDF-сертификата об окончании курса**.
+2. **Финальная полировка перед релизом v1.0.0**.
+
 
 
 
