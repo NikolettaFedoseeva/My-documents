@@ -1,5 +1,6 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { DocApiService, useDocProgressStore } from '@/entities/doc'
+import { soundService } from '@/shared/lib/audio'
 import { DeckCard, FlashcardRating, TrainingSessionStats } from '../types'
 
 export interface UseDeckTrainerOptions {
@@ -147,11 +148,15 @@ export function useDeckTrainer(options: UseDeckTrainerOptions = {}) {
   }
 
   const flipCard = (): void => {
+    soundService.playFlip()
     isFlipped.value = !isFlipped.value
   }
 
   const toggleHint = (): void => {
     isHintVisible.value = !isHintVisible.value
+    if (isHintVisible.value) {
+      soundService.playHint()
+    }
   }
 
   const nextCard = (): void => {
@@ -162,6 +167,8 @@ export function useDeckTrainer(options: UseDeckTrainerOptions = {}) {
     if (currentIndex.value >= cards.value.length) {
       isFinished.value = true
       stopTimer()
+      // Победный перезвон в честь завершения всей колоды
+      soundService.playVictoryChime()
       // Бонусный опыт за завершение всей тренировки (+50 XP)
       progressStore.addBonusXp(50)
       earnedXp.value += 50
@@ -179,6 +186,9 @@ export function useDeckTrainer(options: UseDeckTrainerOptions = {}) {
         maxCombo.value = combo.value
       }
 
+      // Звуковой мажорный аккорд успеха с повышением тональности при комбо
+      soundService.playSuccess(combo.value)
+
       // Базовые 25 XP + комбо бонус
       const comboBonus = Math.min(25, (combo.value - 1) * 5)
       const cardXp = 25 + comboBonus
@@ -192,6 +202,7 @@ export function useDeckTrainer(options: UseDeckTrainerOptions = {}) {
     } else if (rating === 'doubt') {
       doubtCount.value += 1
       combo.value = 0
+      soundService.playDoubt()
       const cardXp = 10
       earnedXp.value += cardXp
 
@@ -201,6 +212,7 @@ export function useDeckTrainer(options: UseDeckTrainerOptions = {}) {
     } else if (rating === 'repeat') {
       repeatCount.value += 1
       combo.value = 0
+      soundService.playRepeat()
       mistakeCards.value.push(card)
 
       progressStore.rateFlashcard(card.docId, 'repeat')
@@ -211,11 +223,13 @@ export function useDeckTrainer(options: UseDeckTrainerOptions = {}) {
   }
 
   const restartSession = (): void => {
+    soundService.playFlip()
     loadCards()
   }
 
   const repeatMistakes = (): void => {
     if (mistakeCards.value.length === 0) return
+    soundService.playFlip()
     const shuffled = shuffleArray(mistakeCards.value)
     cards.value = shuffled
     initialTotalCards.value = shuffled.length
@@ -302,5 +316,8 @@ export function useDeckTrainer(options: UseDeckTrainerOptions = {}) {
     rateCard,
     restartSession,
     repeatMistakes,
+    isSoundMuted: soundService.isMuted,
+    toggleSound: () => soundService.toggleMute(),
+    soundService,
   }
 }

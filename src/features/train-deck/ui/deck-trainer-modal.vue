@@ -32,6 +32,8 @@ const {
   sessionStats,
   combo,
   mistakeCards,
+  isSoundMuted,
+  toggleSound,
   flipCard,
   toggleHint,
   rateCard,
@@ -84,6 +86,15 @@ const {
         <span v-if="!isFinished" class="card-counter">
           {{ Math.min(currentIndex + 1, cards.length) }} / {{ initialTotalCards }}
         </span>
+        <button
+          type="button"
+          class="btn-sound-toggle"
+          :class="{ 'btn-sound-toggle--muted': isSoundMuted }"
+          :title="isSoundMuted ? 'Включить тактильные звуки' : 'Выключить тактильные звуки'"
+          @click="toggleSound"
+        >
+          <span class="sound-icon">{{ isSoundMuted ? '🔇' : '🔊' }}</span>
+        </button>
         <button
           type="button"
           class="btn-close"
@@ -443,6 +454,45 @@ const {
   font-size: 0.95rem;
   font-weight: 700;
   color: #cbd5e1;
+}
+
+.btn-sound-toggle {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #cbd5e1;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 1rem;
+
+  &:hover {
+    background: rgba(99, 102, 241, 0.25);
+    border-color: rgba(129, 140, 248, 0.5);
+    transform: scale(1.08);
+  }
+
+  &--muted {
+    opacity: 0.55;
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.08);
+
+    &:hover {
+      opacity: 1;
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+  }
+
+  .sound-icon {
+    display: inline-block;
+    line-height: 1;
+    user-select: none;
+  }
 }
 
 .btn-close {
