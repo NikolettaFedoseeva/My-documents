@@ -2,8 +2,12 @@
 import { useAppHeader } from "../model/use-app-header";
 import AppHeaderThemeToggle from "./app-header-theme-toggle.vue";
 import AppHeaderMobile from "./app-header-mobile.vue";
+import AppHeaderRoleSwitcher from "./app-header-role-switcher.vue";
+import { useUserSessionStore } from "@/entities/user";
 
 // #region composable
+const sessionStore = useUserSessionStore();
+
 const {
   navLinks,
   currentPath,
@@ -29,7 +33,7 @@ const {
           <span class="app-header__badge">PRO</span>
         </div>
 
-        <!-- Навигационные ссылки: Главная, Документация, Студия автора -->
+        <!-- Навигационные ссылки: Главная, Курсы, Документация, Студия автора, Админ -->
         <nav class="app-header__nav">
           <button
             type="button"
@@ -39,6 +43,19 @@ const {
           >
             Главная
           </button>
+
+          <button
+            type="button"
+            class="app-header__nav-link"
+            :class="{
+              'app-header__nav-link--active': currentPath.startsWith('/courses'),
+            }"
+            @click="navigateTo('/courses')"
+          >
+            <span class="nav-icon">📚</span>
+            <span>Курсы</span>
+          </button>
+
           <button
             type="button"
             class="app-header__nav-link"
@@ -48,9 +65,11 @@ const {
             @click="navigateTo('/docs')"
           >
             <span class="nav-icon">📖</span>
-            <span>Документация</span>
+            <span>Справочник</span>
           </button>
+
           <button
+            v-if="sessionStore.isAuthor"
             type="button"
             class="app-header__nav-link"
             :class="{
@@ -61,23 +80,57 @@ const {
             <span class="nav-icon">✍️</span>
             <span>Студия автора</span>
           </button>
+
+          <button
+            v-if="sessionStore.isAdmin"
+            type="button"
+            class="app-header__nav-link"
+            :class="{
+              'app-header__nav-link--active': currentPath.startsWith('/admin'),
+            }"
+            @click="navigateTo('/admin')"
+          >
+            <span class="nav-icon">👑</span>
+            <span>Админ</span>
+          </button>
         </nav>
       </div>
 
-      <!-- Правая часть: Войти в Кабинет + Круглая тема + Мобильный гамбургер -->
+      <!-- Правая часть: Переключатель Роли + Профиль/Войти + Круглая тема + Мобильный гамбургер -->
       <div class="app-header__actions">
+        <!-- 1. Интерактивный переключатель роли (RBAC) -->
+        <AppHeaderRoleSwitcher />
+
+        <!-- 2. Авторизованный профиль или кнопка Войти -->
         <button
+          v-if="sessionStore.isAuthenticated"
+          type="button"
+          class="app-header__user-btn"
+          :class="{
+            'app-header__user-btn--active': currentPath.startsWith('/cabinet'),
+          }"
+          :title="`Личный кабинет (${sessionStore.currentUser.name})`"
+          @click="navigateTo('/cabinet')"
+        >
+          <img
+            :src="sessionStore.currentUser.avatar"
+            :alt="sessionStore.currentUser.name"
+            class="user-avatar-img"
+          />
+          <span class="user-name">{{ sessionStore.currentUser.name }}</span>
+        </button>
+
+        <button
+          v-else
           type="button"
           class="app-header__auth-btn"
           :class="{
-            'app-header__auth-btn--active':
-              currentPath.startsWith('/auth') ||
-              currentPath.startsWith('/cabinet'),
+            'app-header__auth-btn--active': currentPath.startsWith('/auth'),
           }"
           @click="navigateTo('/auth')"
         >
           <span class="auth-icon">🔑</span>
-          <span>Войти в Кабинет</span>
+          <span>Войти</span>
         </button>
 
         <!-- Круглая кнопка переключения тем -->
@@ -259,6 +312,49 @@ const {
     .auth-icon {
       font-size: 0.95rem;
       line-height: 1;
+    }
+
+    @media (max-width: 768px) {
+      display: none;
+    }
+  }
+
+  &__user-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.85rem 0.35rem 0.4rem;
+    border-radius: 9999px;
+    background: var(--bg-card, rgba(255, 255, 255, 0.08));
+    border: 1px solid var(--border-color, rgba(255, 255, 255, 0.15));
+    color: var(--text-main, #ffffff);
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      border-color: var(--primary, #38bdf8);
+      background: var(--bg-card-hover, rgba(255, 255, 255, 0.14));
+    }
+
+    &--active {
+      border-color: var(--primary, #38bdf8);
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
+    }
+
+    .user-avatar-img {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .user-name {
+      max-width: 120px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     @media (max-width: 768px) {

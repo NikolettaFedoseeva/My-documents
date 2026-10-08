@@ -6,6 +6,28 @@
 
 ## 📅 Хронология работ
 
+### [2026-10-07] — Багфикс: Навигация к курсам из Личного кабинета (`/cabinet ➔ /docs`)
+
+#### 🎯 Цель:
+Исправить отсутствие реакции при нажатии на кнопки «К уроку ▶» (hero-виджет быстрого продолжения) и «Продолжить →» (карточки курсов) в личном кабинете студента, а также исследовать природу консольных предупреждений.
+
+#### 🧠 Архитектурные решения (FSD):
+1. **Слой `entities/course`**:
+   - В интерфейс `Course` добавлено опциональное поле `slug?: string`.
+   - В `MOCK_COURSES` (`CourseApiService`) прописаны соответствующие слаги курсов (`vue3-mastery`, `lern-architecture`, `postgres-db`), связывающие кабинет напрямую со справочником `CourseCodex`.
+   - В компоненте `CourseCard` (`entities/course/ui/course-card`) вся карточка сделана интерактивно кликабельной (`cursor: pointer`), на кнопке «Продолжить →» добавлен модификатор `@click.stop="emit('continue', props.course.id)"`.
+2. **Слой `features/track-progress`**:
+   - В виджете `QuickContinueWidget` весь контейнер сделан кликабельным (`cursor: pointer`), добавлен плавный hover-эффект со свечением и остановка всплытия на кнопке «К уроку ▶».
+3. **Слой `widgets/cabinet-dashboard`**:
+   - В `CabinetDashboard` (`widgets/cabinet-dashboard/ui/cabinet-dashboard.vue`) подключен `useRouter()`.
+   - Добавлен обработчик `onContinueCourse(courseId: string)`, который находит курс по `id`/`slug` и выполняет бесшовный переход `router.push({ path: '/docs', query: { course: target } })`.
+   - На дочерний компонент `<CabinetCoursesTab>` повешен слушатель `@continue-course="onContinueCourse"`, который ранее отсутствовал и приводил к потере события.
+4. **Анализ ошибок консоли**:
+   - Сетевые ошибки `http://localhost:2001/remoteEntry.js net::ERR_CONNECTION_REFUSED` — ожидаемое поведение Webpack Module Federation при выключенных независимых микрофронтендах (`lern_landing`, `lern_cabinet`, `lern_auth`). Хост LERN успешно перехватывает их через `catch` и использует встроенный fallback-компонент.
+   - Ошибка `clammy-meas: Cannot read properties of undefined (reading 'startTime')` исходит из внешнего расширения браузера (Performance/Metrics Chrome extension) и не связана с кодовой базой платформы.
+
+---
+
 ### [2026-10-05] — Этап 3.3: Оживление прогресса и геймификация (Pinia + LocalStorage)
 
 #### 🎯 Цель:
@@ -174,13 +196,80 @@
 
 ---
 
-## 🔮 Следующие шаги и потенциальные задачи:
-1. **Этап 6: Разработка Backend-сервиса (API / Supabase / PostgreSQL)**:
-   - Создание таблиц `courses`, `course_modules`, `course_chapters`, `course_progress`.
-   - Реализация `DocHttpRepository` для отправки курсов на сервер.
-   - Аутентификация авторов и привязка курсов к `author_id`.
-2. **Расширение UI Kit (Этап 2)**:
-   - Вынесение общих компонентов (`UiModal`, `UiTabs`, `UiAlert`) в библиотеку `lern_ui_kit`.
-3. **Markdown / WYSIWYG поддержка**:
-   - Поддержка форматированного Markdown-текста в секциях статей.
+### [2026-10-07] — Этап 2: Обогащение Shared UI Kit (`lern-ui-kit`)
+
+#### 🎯 Цель:
+Разработать и интегрировать пачку универсальных, доступных, строго типизированных Vue 3 + TypeScript компонентов в библиотеку `lern-ui-kit`, протестировать их на интерактивной витрине `/ui-kit` и внедрить в продуктовые модули (каталог курсов, Студию автора).
+
+#### 🧱 Созданные и обновлённые компоненты:
+1. **`UiLoader` (`ui-loader`)**:
+   - Адаптивный индикатор загрузки с 3 вариантами анимации (`spinner` с градиентным вращением, `dots` с бегущими точками, `pulse` с расширяющейся световой волной).
+   - Размеры от `xs` до `xl`, выбор цвета (`primary`, `white`, `muted`, `success`), полноэкранный оверлей `fullscreen` и текстовая подпись.
+2. **`UiTooltip` (`ui-tooltip`)**:
+   - Всплывающая подсказка с плавной анимацией появления, позиционированием (`top`, `bottom`, `left`, `right`), указателем-стрелочкой и поддержкой тем оформления (`dark`, `light`, `primary`).
+3. **`UiCheckbox` (`ui-checkbox`)**:
+   - Интерактивный кастомный чекбокс с микроанимацией SVG-галочки, поддержкой `v-model`, неопределённого состояния `indeterminate` (для частичного выбора), заблокированного режима `disabled`, описания и размеров (`sm`, `md`, `lg`).
+4. **`UiTextarea` (`ui-textarea`)**:
+   - Многострочное поле ввода с поддержкой `v-model`, автоматического или ручного изменения размера (`resize`), счётчика символов (`120 / 500`), сообщений об ошибках и подсказок.
+5. **`UiTag` & `UiTagsBar` (`ui-tag`)**:
+   - `UiTag`: цветные кликабельные и удаляемые теги с иконками и поддержкой дизайн-систем.
+   - `UiTagsBar`: интерактивная панель ввода тегов (добавление по `Enter`/запятой, удаление по `Backspace`/крестику).
+
+#### 🚀 Интеграция в проект:
+- На странице [`/ui-kit`](file:///c:/projects/lern/lern_host/src/pages/ui-kit/ui/ui-kit-page.vue) добавлены 5 интерактивных демо-стендов со всеми состояниями и взаимодействиями.
+- В каталоге курсов [`CoursesCatalog`](file:///c:/projects/lern/lern_host/src/widgets/courses-catalog/ui/courses-catalog.vue) заменены самодельные индикаторы загрузки на `UiLoader` и теги на `UiTag`.
+- В редакторе Студии автора [`AuthorEditor`](file:///c:/projects/lern/lern_host/src/widgets/author-studio/ui/author-editor.vue) описание главы переведено на `UiTextarea`.
+- В витрине курсов автора [`AuthorCoursesBoard`](file:///c:/projects/lern/lern_host/src/widgets/author-studio/ui/author-courses-board.vue) теги курсов переведены на `UiTag`.
+
+---
+
+---
+
+### [2026-10-07] — Этап 6: Ролевая модель доступов (Role-Based Access Control / RBAC)
+
+#### 🎯 Цель:
+Спроектировать и внедрить полноценную систему разграничения прав доступа (RBAC), связывающую профили пользователей, матрицу прав `Permission`, ролевую защиту маршрутов через Navigation Guards и удобный демо-переключатель ролей в шапке для моментального тестирования платформы.
+
+#### 🧠 Архитектурные решения (FSD & Security):
+1. **Слой сущности пользователя (`entities/user`)**:
+   - Описаны 4 основные роли: `guest` (гость), `student` (студент), `author` (автор курсов), `admin` (администратор).
+   - Определена матрица прав `Permission` (`view_courses`, `study_courses`, `create_courses`, `edit_own_courses`, `manage_all_courses`, `manage_users`, `access_admin_panel`).
+   - Создано Pinia-хранилище `useUserSessionStore` (`model/user-session-store.ts`) с автосохранением в `localStorage` и предустановленными профилями для каждой роли.
+2. **Защита маршрутов через Navigation Guards (`app/router`)**:
+   - К маршрутам добавлены метаданные:
+     - `/author`: `requiresAuth: true`, `roles: ['author', 'teacher', 'admin']`
+     - `/admin`: `requiresAuth: true`, `roles: ['admin']`
+     - `/cabinet`: `requiresAuth: true`, `roles: ['student', 'author', 'teacher', 'admin']`
+     - `/courses`, `/docs`: открыты для всех (включая `guest`).
+   - Внедрен глобальный перехватчик `router.beforeEach`:
+     - Неавторизованные пользователи (гости) при попытке перехода в закрытый раздел перенаправляются на `/auth?redirect=...`.
+     - Авторизованные пользователи без достаточных прав перенаправляются на страницу `ForbiddenPage` (`/forbidden` 403) с вежливым объяснением и кнопкой быстрого переключения роли.
+3. **Интерактивный переключатель роли в шапке (`AppHeaderRoleSwitcher`)**:
+   - Компактный бейдж в правой части шапки с текущей ролью (`👤 Гость`, `🎓 Студент`, `✍️ Автор`, `👑 Админ`).
+   - Выпадающее меню смены роли в 1 клик с подсветкой активной роли.
+   - Динамическая адаптация навигации шапки: кнопки «Студия автора» и «Админ» отображаются только при наличии соответствующих прав.
+   - Для авторизованных пользователей в шапке отображается аватарка и имя с быстрым переходом в `/cabinet`, для гостей — кнопка «Войти».
+4. **Адаптация каталога курсов (`CoursesCatalog`)**:
+   - Кнопка действия в Hero-блоке подстраивается под роль: «Кабинет автора & Конструктор» (для авторов), «Стать автором» (для студентов), «Авторизоваться» (для гостей).
+
+#### 📁 Затронутые и созданные файлы:
+- `src/entities/user/types/index.ts` — роли и матрица прав RBAC.
+- `src/entities/user/model/user-session-store.ts` — хранилище сессии пользователя.
+- `src/entities/user/index.ts` — экспорт session store.
+- `src/pages/forbidden/*` — страница отказа в доступе (403).
+- `src/app/router/index.ts` — Navigation Guards и ролевая защита маршрутов.
+- `src/widgets/app-header/ui/app-header-role-switcher.vue` — выпадающий переключатель роли.
+- `src/widgets/app-header/ui/app-header.vue` & `model/use-app-header.ts` — интеграция RBAC в шапку.
+- `src/widgets/courses-catalog/ui/courses-catalog.vue` — динамические действия по ролям.
+- `docs/tasks.md` & `docs/worklog.md` — актуализация документации.
+
+---
+
+## 🔮 Следующие шаги:
+1. **Разработка Backend-сервиса (API / PostgreSQL)**:
+   - Спроектировать таблицы базы данных (`courses`, `modules`, `chapters`, `users`, `progress`).
+   - Реализовать `DocHttpRepository` для отправки и синхронизации курсов с сервером.
+2. **Экспорт / Импорт курсов в JSON** (локальный перенос и бэкапы).
+
+
 

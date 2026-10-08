@@ -17,7 +17,7 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div class="quick-continue-widget">
+  <div class="quick-continue-widget" @click="emit('resume')">
     <div class="quick-continue-widget__info">
       <span class="quick-continue-widget__badge">🔥 Продолжить обучение</span>
       <h4 class="quick-continue-widget__course">{{ props.courseTitle }}</h4>
@@ -27,7 +27,7 @@ const emit = defineEmits<{
     <button
       type="button"
       class="quick-continue-widget__btn"
-      @click="emit('resume')"
+      @click.stop="emit('resume')"
     >
       <span>К уроку</span>
       <span>▶</span>
@@ -44,6 +44,14 @@ const emit = defineEmits<{
   border: 1px solid rgba(99, 102, 241, 0.3);
   border-radius: 14px;
   padding: 1.1rem 1.5rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    border-color: rgba(99, 102, 241, 0.5);
+    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.2);
+  }
 
   &__info {
     display: flex;

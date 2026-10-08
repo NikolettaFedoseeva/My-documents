@@ -1,10 +1,19 @@
 <script setup lang="ts">
+import { useRouter } from 'vue-router'
 import { useCabinetDashboard } from '../model/use-cabinet-dashboard'
 import CabinetProfileHeader from './cabinet-profile-header.vue'
 import CabinetCoursesTab from './cabinet-courses-tab.vue'
 import CabinetAssignmentsTab from './cabinet-assignments-tab.vue'
 import CabinetAchievementsTab from './cabinet-achievements-tab.vue'
 import CabinetSettingsTab from './cabinet-settings-tab.vue'
+
+// #region defineEmits
+const emit = defineEmits<{
+  (e: 'continue-course', courseId: string): void
+}>()
+// #endregion defineEmits
+
+const router = useRouter()
 
 // #region composable
 const {
@@ -18,6 +27,15 @@ const {
   setTab,
 } = useCabinetDashboard()
 // #endregion composable
+
+// #region Функции
+const onContinueCourse = (courseId: string): void => {
+  emit('continue-course', courseId)
+  const found = courses.value.find((c) => c.id === courseId || c.slug === courseId)
+  const target = found?.slug || found?.id || courseId
+  router.push({ path: '/docs', query: { course: target } })
+}
+// #endregion Функции
 </script>
 
 <template>
@@ -75,6 +93,7 @@ const {
         <CabinetCoursesTab
           v-if="activeTab === 'courses'"
           :courses="courses"
+          @continue-course="onContinueCourse"
         />
 
         <CabinetAssignmentsTab

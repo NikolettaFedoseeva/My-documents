@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { UiTag, UiLoader } from 'lern-ui-kit'
 import type { CourseCodex } from '@/entities/doc'
 
 // #region defineProps
@@ -236,9 +237,13 @@ const onOpenReader = (course: CourseCodex) => {
           </div>
 
           <div v-if="course.tags && course.tags.length > 0" class="course-tags">
-            <span v-for="tag in course.tags" :key="tag" class="tag-chip">
-              #{{ tag }}
-            </span>
+            <UiTag
+              v-for="tag in course.tags"
+              :key="tag"
+              :label="'#' + tag"
+              variant="primary"
+              size="sm"
+            />
           </div>
         </div>
 

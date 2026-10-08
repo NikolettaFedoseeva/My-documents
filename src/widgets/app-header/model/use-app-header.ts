@@ -1,25 +1,48 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useTheme, type AppTheme } from '@/shared/lib/theme'
+import { useUserSessionStore } from '@/entities/user'
 import type { NavLink } from './types'
 
 export function useAppHeader() {
   const route = useRoute()
   const router = useRouter()
+  const sessionStore = useUserSessionStore()
   const { currentTheme, themes, setTheme, initTheme } = useTheme()
 
   // #region refs
   const isMobileMenuOpen = ref<boolean>(false)
   // #endregion refs
 
-  // #region Navigation Items
-  const navLinks: NavLink[] = [
-    { title: 'Главная', path: '/' },
-    { title: 'Курсы', path: '/courses', icon: '📚' },
-    { title: 'Справочник', path: '/docs', icon: '📖' },
-    { title: 'Студия автора', path: '/author', icon: '✍️' },
-    { title: 'Войти в Кабинет', path: '/auth', icon: '🔑', isHighlight: true },
-  ]
+  // #region Navigation Items (RBAC Dynamic)
+  const navLinks = computed<NavLink[]>(() => {
+    const list: NavLink[] = [
+      { title: 'Главная', path: '/' },
+      { title: 'Курсы', path: '/courses', icon: '📚' },
+      { title: 'Справочник', path: '/docs', icon: '📖' },
+    ]
+
+    if (sessionStore.isAuthor) {
+      list.push({ title: 'Студия автора', path: '/author', icon: '✍️' })
+    }
+
+    if (sessionStore.isAdmin) {
+      list.push({ title: 'Панель админа', path: '/admin', icon: '👑' })
+    }
+
+    if (sessionStore.isAuthenticated) {
+      list.push({
+        title: `Кабинет (${sessionStore.currentUser.name})`,
+        path: '/cabinet',
+        icon: '👤',
+        isHighlight: true,
+      })
+    } else {
+      list.push({ title: 'Войти в Кабинет', path: '/auth', icon: '🔑', isHighlight: true })
+    }
+
+    return list
+  })
   // #endregion Navigation Items
 
 

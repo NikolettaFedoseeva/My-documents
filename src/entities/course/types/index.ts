@@ -1,5 +1,6 @@
 export interface Course {
   id: string
+  slug?: string
   title: string
   category: string
   icon: string

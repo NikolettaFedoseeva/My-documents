@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { UiTextarea, UiTooltip } from 'lern-ui-kit'
 import type { DocCategory } from '@/entities/doc'
 import type { EditorTab } from '../model/use-author-studio'
 
@@ -131,13 +132,13 @@ const emit = defineEmits<{
           </div>
 
           <div class="form-group form-group--full">
-            <label class="form-label">Краткое описание (лид статьи)</label>
-            <textarea
+            <UiTextarea
               v-model="props.draft.description"
-              rows="3"
+              label="Краткое описание (лид статьи)"
+              :rows="3"
               placeholder="Кратко опишите, о чем эта глава и что освоит студент..."
-              class="form-textarea"
-            ></textarea>
+              hint="Отображается в карточке главы и в начале пергаментного листа"
+            />
           </div>
 
           <div class="form-group">

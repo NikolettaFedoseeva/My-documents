@@ -3,6 +3,7 @@ import { Course, AssignmentItem, Achievement, UserCabinetStats } from '../types'
 const MOCK_COURSES: Course[] = [
   {
     id: 'course-vue3',
+    slug: 'vue3-mastery',
     title: 'Vue 3 & TypeScript Pro',
     category: 'Frontend',
     icon: '⚡',
@@ -15,6 +16,7 @@ const MOCK_COURSES: Course[] = [
   },
   {
     id: 'course-fsd',
+    slug: 'lern-architecture',
     title: 'Feature-Sliced Design в реальных проектах',
     category: 'Архитектура',
     icon: '🏗️',
@@ -27,6 +29,7 @@ const MOCK_COURSES: Course[] = [
   },
   {
     id: 'course-nestjs',
+    slug: 'postgres-db',
     title: 'NestJS & Supabase Microservices',
     category: 'Backend',
     icon: '🚀',

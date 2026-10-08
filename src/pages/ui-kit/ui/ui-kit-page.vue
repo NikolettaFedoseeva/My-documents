@@ -17,6 +17,12 @@ import {
   UiAlert,
   UiTable,
   UiCarousel,
+  UiLoader,
+  UiTooltip,
+  UiCheckbox,
+  UiTextarea,
+  UiTag,
+  UiTagsBar,
   InteractiveFlashcard,
 } from "lern-ui-kit";
 
@@ -57,6 +63,13 @@ const categoryOptions: DropdownOption[] = [
 ];
 
 const isModalOpen = ref<boolean>(false);
+
+// Демо новых компонентов UI Kit
+const demoCheckbox1 = ref<boolean>(true);
+const demoCheckbox2 = ref<boolean>(false);
+const demoCheckbox3 = ref<boolean>(true);
+const demoTextarea = ref<string>("Архитектура FSD разделяет приложение на слои: app, pages, widgets, features, entities, shared.");
+const demoTags = ref<string[]>(["vue3", "typescript", "fsd", "pinia", "active-recall"]);
 
 // Table Demo
 const tableColumns: TableColumn[] = [
@@ -611,6 +624,114 @@ const onResetQuiz = () => {
                     >
                   </template>
                 </UiModal>
+              </div>
+            </div>
+
+            <!-- 1. Индикаторы Загрузки (UiLoader) -->
+            <div class="ui-kit-group">
+              <h3>Индикаторы Загрузки (UiLoader)</h3>
+              <div class="ui-kit-row" style="align-items: center; gap: 2rem; flex-wrap: wrap;">
+                <UiLoader size="sm" variant="spinner" text="Малый" />
+                <UiLoader size="md" variant="spinner" text="Средний" />
+                <UiLoader size="lg" variant="spinner" text="Крупный" />
+                <UiLoader size="md" variant="dots" color="success" text="Точки (Dots)" />
+                <UiLoader size="md" variant="pulse" color="primary" text="Пульс (Pulse)" />
+              </div>
+            </div>
+
+            <!-- 2. Всплывающие Подсказки (UiTooltip) -->
+            <div class="ui-kit-group">
+              <h3>Всплывающие Подсказки (UiTooltip)</h3>
+              <div class="ui-kit-row" style="gap: 1.5rem; flex-wrap: wrap;">
+                <UiTooltip text="Подсказка сверху (Top)" placement="top">
+                  <UiButton variant="secondary" size="sm">Сверху ⬆️</UiButton>
+                </UiTooltip>
+                <UiTooltip text="Подсказка снизу (Bottom)" placement="bottom">
+                  <UiButton variant="secondary" size="sm">Снизу ⬇️</UiButton>
+                </UiTooltip>
+                <UiTooltip text="Подсказка слева (Left)" placement="left">
+                  <UiButton variant="secondary" size="sm">Слева ⬅️</UiButton>
+                </UiTooltip>
+                <UiTooltip text="Подсказка справа (Right)" placement="right">
+                  <UiButton variant="secondary" size="sm">Справа ➡️</UiButton>
+                </UiTooltip>
+                <UiTooltip text="Акцентная подсказка" theme="primary" placement="top">
+                  <UiButton variant="primary" size="sm">Primary Tooltip ⭐</UiButton>
+                </UiTooltip>
+              </div>
+            </div>
+
+            <!-- 3. Кастомные Чекбоксы (UiCheckbox) -->
+            <div class="ui-kit-group">
+              <h3>Кастомные Чекбоксы (UiCheckbox)</h3>
+              <div class="ui-kit-grid">
+                <UiCheckbox
+                  v-model="demoCheckbox1"
+                  label="Интервальное повторение включено"
+                  description="Система автоматически напомнит повторить флешкарты через 24 часа"
+                />
+                <UiCheckbox
+                  v-model="demoCheckbox2"
+                  label="Звуковые эффекты начисления XP"
+                  description="Воспроизводить победный звон при верном ответе на тест"
+                />
+                <UiCheckbox
+                  v-model="demoCheckbox3"
+                  label="Частичный выбор (Indeterminate)"
+                  indeterminate
+                  description="3 из 5 модулей курса освоены"
+                />
+                <UiCheckbox
+                  :model-value="false"
+                  disabled
+                  label="Заблокированная опция (Disabled)"
+                  description="Доступно только в Premium кодексе"
+                />
+              </div>
+            </div>
+
+            <!-- 4. Многострочное Поле Ввода (UiTextarea) -->
+            <div class="ui-kit-group">
+              <h3>Многострочное Поле Ввода (UiTextarea)</h3>
+              <div class="ui-kit-grid">
+                <UiTextarea
+                  v-model="demoTextarea"
+                  label="Конспект статьи"
+                  placeholder="Запишите ваши мысли и тезисы к прочитанной главе..."
+                  :maxlength="250"
+                  hint="Поддерживаются тезисы и быстрые заметки"
+                />
+                <UiTextarea
+                  label="Поле с ошибкой валидации"
+                  placeholder="Введите системное описание..."
+                  error="Описание модуля должно содержать минимум 20 символов"
+                />
+              </div>
+            </div>
+
+            <!-- 5. Теги и Панель Тегов (UiTag & UiTagsBar) -->
+            <div class="ui-kit-group">
+              <h3>Теги и Панель Тегов (UiTag & UiTagsBar)</h3>
+              <div class="ui-kit-grid">
+                <div class="ui-kit-row" style="gap: 0.6rem; flex-wrap: wrap;">
+                  <UiTag label="Default" variant="default" />
+                  <UiTag label="#frontend" variant="primary" icon="💻" />
+                  <UiTag label="#completed" variant="success" icon="✓" />
+                  <UiTag label="#in-progress" variant="warning" icon="⏳" />
+                  <UiTag label="#archived" variant="danger" icon="🔒" />
+                  <UiTag label="#fsd-architecture" variant="purple" icon="🧱" removable />
+                </div>
+
+                <div>
+                  <h4 style="margin: 0 0 0.5rem; font-size: 0.85rem; color: var(--text-muted);">
+                    Интерактивный ввод тегов (нажмите Enter или запятую):
+                  </h4>
+                  <UiTagsBar
+                    v-model:tags="demoTags"
+                    placeholder="Добавить тег курса..."
+                    variant="primary"
+                  />
+                </div>
               </div>
             </div>
           </div>

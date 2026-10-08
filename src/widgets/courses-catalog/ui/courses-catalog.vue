@@ -1,5 +1,11 @@
 <script setup lang="ts">
+import { useRouter } from 'vue-router'
+import { UiLoader, UiTag } from 'lern-ui-kit'
+import { useUserSessionStore } from '@/entities/user'
 import { useCoursesCatalog } from '../model/use-courses-catalog'
+
+const router = useRouter()
+const sessionStore = useUserSessionStore()
 
 const {
   courses,
@@ -31,8 +37,29 @@ const {
         </p>
 
         <div class="hero-actions">
-          <button type="button" class="btn-author" @click="openAuthorStudio">
+          <button
+            v-if="sessionStore.isAuthor"
+            type="button"
+            class="btn-author"
+            @click="openAuthorStudio"
+          >
             <span>✍️ Кабинет автора & Конструктор курсов</span>
+          </button>
+          <button
+            v-else-if="sessionStore.isAuthenticated"
+            type="button"
+            class="btn-author"
+            @click="sessionStore.switchRole('author'); openAuthorStudio()"
+          >
+            <span>✨ Стать автором & Создать свой курс</span>
+          </button>
+          <button
+            v-else
+            type="button"
+            class="btn-author"
+            @click="router.push('/auth')"
+          >
+            <span>🔑 Авторизоваться для создания курсов</span>
           </button>
         </div>
 
@@ -143,10 +170,9 @@ const {
         </div>
       </div>
 
-      <!-- Состояние загрузки -->
+      <!-- Состояние загрузки (UiLoader) -->
       <div v-if="isLoading" class="catalog-loading">
-        <div class="spinner-large"></div>
-        <p>Загрузка каталога дисциплин...</p>
+        <UiLoader size="lg" variant="spinner" text="Загрузка каталога дисциплин..." />
       </div>
 
       <!-- Пустое состояние -->
@@ -213,9 +239,13 @@ const {
             </div>
 
             <div v-if="course.tags && course.tags.length > 0" class="course-tags">
-              <span v-for="tag in course.tags" :key="tag" class="tag-badge">
-                #{{ tag }}
-              </span>
+              <UiTag
+                v-for="tag in course.tags"
+                :key="tag"
+                :label="'#' + tag"
+                variant="primary"
+                size="sm"
+              />
             </div>
           </div>
 

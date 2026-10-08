@@ -17,7 +17,7 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div class="course-card">
+  <div class="course-card" @click="emit('continue', props.course.id)">
     <div class="course-card__header">
       <div class="course-card__badge">
         <span class="course-card__icon">{{ props.course.icon }}</span>
@@ -53,7 +53,7 @@ const emit = defineEmits<{
       <button
         type="button"
         class="course-card__btn"
-        @click="emit('continue', props.course.id)"
+        @click.stop="emit('continue', props.course.id)"
       >
         <span>Продолжить</span>
         <span>→</span>
@@ -72,6 +72,7 @@ const emit = defineEmits<{
   border-radius: 16px;
   padding: 1.35rem;
   gap: 1rem;
+  cursor: pointer;
   transition: all 0.3s ease;
 
   &:hover {
