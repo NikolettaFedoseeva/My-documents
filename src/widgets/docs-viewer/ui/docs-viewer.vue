@@ -1,9 +1,13 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { useDocsViewer } from '../model/use-docs-viewer'
 import DocsSidebar from './docs-sidebar.vue'
 import DocsContentViewer from './docs-content-viewer.vue'
 import DocsStudyDeck from './docs-study-deck.vue'
 import DocsSkeleton from './docs-skeleton.vue'
+import { DeckTrainerModal } from '@/features/train-deck'
+
+const isDeckTrainerOpen = ref<boolean>(false)
 
 // #region composable
 const {
@@ -73,6 +77,7 @@ const {
           @update:search-query="searchQuery = $event"
           @select-course="selectCourse"
           @toggle-course-dropdown="toggleCourseDropdown"
+          @open-deck-trainer="isDeckTrainerOpen = true; closeTreeDrawer()"
         />
       </div>
     </div>
@@ -107,9 +112,9 @@ const {
           @update:search-query="searchQuery = $event"
           @select-course="selectCourse"
           @toggle-course-dropdown="toggleCourseDropdown"
+          @open-deck-trainer="isDeckTrainerOpen = true"
         />
       </aside>
-
 
       <!-- 2. Центральная колонка: Пергаментный Лист Статьи (Codex Sheet) -->
       <div class="docs-workspace__content-col">
@@ -130,6 +135,13 @@ const {
         </div>
       </aside>
     </div>
+
+    <!-- Полноэкранный тренажер колоды карточек курса -->
+    <DeckTrainerModal
+      v-if="isDeckTrainerOpen"
+      :course-id="activeCourseId"
+      @close="isDeckTrainerOpen = false"
+    />
   </div>
 </template>
 

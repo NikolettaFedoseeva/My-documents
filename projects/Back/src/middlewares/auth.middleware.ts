@@ -30,3 +30,20 @@ export function authMiddleware(req: AuthenticatedRequest, res: Response, next: N
     })
   }
 }
+
+export function requireRoles(...allowedRoles: string[]) {
+  return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    if (!req.user) {
+      return res.status(401).json({ success: false, errorMessage: 'Пользователь не авторизован' })
+    }
+
+    if (!allowedRoles.includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        errorMessage: `Доступ запрещен. Необходима роль: ${allowedRoles.join(', ')}`,
+      })
+    }
+
+    next()
+  }
+}

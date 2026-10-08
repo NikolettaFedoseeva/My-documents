@@ -3,6 +3,9 @@ import cors from 'cors'
 import cookieParser from 'cookie-parser'
 import dotenv from 'dotenv'
 import { authRouter } from './modules/auth/auth.controller'
+import { usersRouter } from './modules/users/users.controller'
+import { coursesRouter } from './modules/courses/courses.controller'
+import { progressRouter } from './modules/progress/progress.controller'
 
 dotenv.config()
 
@@ -31,23 +34,19 @@ app.use(cookieParser())
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
-    message: 'Lern Platform Backend API Server active 🚀',
+    message: 'Lern Platform Backend API Server active with Supabase Cloud DB 🚀',
     supabaseUrl: process.env.SUPABASE_URL,
     timestamp: new Date().toISOString(),
   })
 })
 
-// Подключение роутера авторизации
+// Подключение роутеров API
 app.use('/api/auth', authRouter)
-
-app.get('/api/topics', (req, res) => {
-  res.json([
-    { id: 'topic-1', title: 'watch и watchEffect', section: 'Vue 3', progress: 62 },
-    { id: 'topic-2', title: 'Введение в Composition API', section: 'Vue 3', progress: 100 },
-    { id: 'topic-3', title: 'Глубокое наблюдение', section: 'Vue 3', progress: 25 },
-  ])
-})
+app.use('/api/users', usersRouter)
+app.use('/api/courses', coursesRouter)
+app.use('/api/progress', progressRouter)
 
 app.listen(PORT, () => {
   console.log(`🚀 Lern Backend API Server running at http://localhost:${PORT}`)
+  console.log(`☁️ Supabase Cloud DB: ${process.env.SUPABASE_URL}`)
 })

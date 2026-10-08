@@ -301,6 +301,15 @@ export const useDocProgressStore = defineStore('doc-progress', () => {
   }
 
   /**
+   * Начисление бонусного опыта (например, за тренировку карточек и комбо)
+   */
+  const addBonusXp = (amount: number): void => {
+    hydrate()
+    totalXp.value += Math.max(0, amount)
+    persist()
+  }
+
+  /**
    * Установка явного статуса для главы
    */
   const setDocStatus = (docId: string, status: DocStatus): void => {
@@ -350,6 +359,7 @@ export const useDocProgressStore = defineStore('doc-progress', () => {
     getCategoryProgress,
     visitDoc,
     rateFlashcard,
+    addBonusXp,
     submitQuiz,
     toggleCompleteDoc,
     setDocStatus,

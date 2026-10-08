@@ -11,7 +11,7 @@ export interface RegisterPayload {
   email: string
   password: string
   confirmPassword: string
-  role: 'student' | 'teacher'
+  role: 'student' | 'author' | 'teacher'
 }
 
 export interface ResetPasswordPayload {
@@ -25,7 +25,10 @@ export interface AuthResponse {
     id: string
     name: string
     email: string
-    role: string
+    role: import('@/entities/user').UserRole
+    avatar?: string
+    xp?: number
+    level?: number
   }
   errorMessage?: string
 }

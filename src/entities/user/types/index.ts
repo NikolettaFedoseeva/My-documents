@@ -20,6 +20,8 @@ export interface User {
   unreadNotificationsCount: number
   xp?: number
   level?: number
+  createdAt?: string
+  isBanned?: boolean
 }
 
 export interface RoleInfo {

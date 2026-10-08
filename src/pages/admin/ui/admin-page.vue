@@ -1,130 +1,213 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { UiButton, UiInput, UiCard, UiTable, UiModal } from 'lern-ui-kit'
+import { AdminDashboard } from '@/widgets/admin-dashboard'
+import { useUserSessionStore } from '@/entities/user'
 
-const newTopicTitle = ref('')
-const newTopicSection = ref('')
-const isAddModalOpen = ref(false)
-
-const columns = [
-  { key: 'title', label: 'Название темы', sortable: true },
-  { key: 'section', label: 'Раздел' },
-  { key: 'questions', label: 'Вопросов' },
-  { key: 'actions', label: 'Действия' },
-]
-
-const data = ref([
-  { title: 'watch и watchEffect', section: 'Vue 3 & Composition API', questions: 4 },
-  { title: 'Введение в Composition API', section: 'Vue 3 & Composition API', questions: 3 },
-  { title: 'Глубокое наблюдение', section: 'Vue 3 & Composition API', questions: 5 },
-])
-
-const onAddTopic = () => {
-  if (!newTopicTitle.value) return
-  data.value.push({
-    title: newTopicTitle.value,
-    section: newTopicSection.value || 'Общий раздел',
-    questions: 0,
-  })
-  newTopicTitle.value = ''
-  newTopicSection.value = ''
-  isAddModalOpen.value = false
-}
+const sessionStore = useUserSessionStore()
 </script>
 
 <template>
   <div class="admin-page">
-    <UiCard variant="glass" padding="lg">
-      <div class="admin-header">
-        <div>
-          <h2>🛠 Панель Администратора & Конструктор</h2>
-          <p>Управление структурой категорий, тем и вопросов</p>
+    <div class="admin-page__container">
+      <!-- Заголовок страницы -->
+      <header class="admin-page__hero">
+        <div class="hero-left">
+          <div class="hero-badge">
+            <span class="badge-icon">🛡️</span>
+            <span>СИСТЕМА УПРАВЛЕНИЯ ПЛАТФОРМОЙ LERN</span>
+          </div>
+          <h1 class="hero-title">Панель Администратора & Модерация</h1>
+          <p class="hero-subtitle">
+            Управление ролями и доступами пользователей, модерация курсов авторов, системная аналитика и глобальные параметры.
+          </p>
         </div>
-        <UiButton variant="primary" @click="isAddModalOpen = true">
-          <template #icon-left>➕</template>
-          Создать новую тему
-        </UiButton>
-      </div>
 
-      <div class="admin-stats">
-        <div class="stat-card">
-          <span class="stat-card__num">{{ data.length }}</span>
-          <span class="stat-card__label">Активных тем</span>
+        <div class="hero-right">
+          <div class="session-card">
+            <div class="session-user">
+              <img
+                :src="sessionStore.currentUser.avatar"
+                :alt="sessionStore.currentUser.name"
+                class="session-avatar"
+              />
+              <div class="session-meta">
+                <span class="session-name">{{ sessionStore.currentUser.name }}</span>
+                <span class="session-role">👑 Главный Администратор</span>
+              </div>
+            </div>
+            <div class="session-indicator">
+              <span class="pulse-dot"></span>
+              <span>Полный доступ (Root)</span>
+            </div>
+          </div>
         </div>
-        <div class="stat-card">
-          <span class="stat-card__num">48</span>
-          <span class="stat-card__label">Вопросов в базе</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-card__num">7</span>
-          <span class="stat-card__label">Визуальных тем</span>
-        </div>
-      </div>
+      </header>
 
-      <div class="admin-table-section">
-        <h3>Управление темами курса</h3>
-        <UiTable :columns="columns" :data="data">
-          <template #cell-actions>
-            <UiButton variant="secondary" size="sm">Редактировать</UiButton>
-          </template>
-        </UiTable>
-      </div>
-
-      <!-- Add Modal -->
-      <UiModal v-model="isAddModalOpen" title="Создание новой темы курса">
-        <div class="modal-form">
-          <UiInput v-model="newTopicTitle" label="Название темы" placeholder="Например: Pinia State Management" />
-          <UiInput v-model="newTopicSection" label="Раздел дисциплин" placeholder="Например: Vue 3" />
-        </div>
-        <template #footer>
-          <UiButton variant="secondary" @click="isAddModalOpen = false">Отмена</UiButton>
-          <UiButton variant="primary" @click="onAddTopic">Создать тему</UiButton>
-        </template>
-      </UiModal>
-    </UiCard>
+      <!-- Виджет админки -->
+      <main class="admin-page__content">
+        <AdminDashboard />
+      </main>
+    </div>
   </div>
 </template>
 
 <style scoped lang="scss">
 .admin-page {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 2.5rem 1.5rem;
+  min-height: calc(100vh - 64px);
+  background: #090d16;
+  color: #f8fafc;
+  padding: 2rem 1.5rem 4rem;
+  box-sizing: border-box;
+
+  &__container {
+    max-width: 1320px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  &__hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+    flex-wrap: wrap;
+    background: linear-gradient(135deg, rgba(30, 27, 75, 0.45) 0%, rgba(15, 23, 42, 0.8) 100%);
+    border: 1px solid rgba(99, 102, 241, 0.25);
+    border-radius: 20px;
+    padding: 2rem 2.5rem;
+    backdrop-filter: blur(16px);
+  }
+
+  &__content {
+    width: 100%;
+  }
 }
-.admin-header {
+
+.hero-left {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 0.6rem;
+  max-width: 720px;
+}
+
+.hero-badge {
+  display: inline-flex;
   align-items: center;
-  margin-bottom: 2rem;
-  h2 { font-size: 1.8rem; font-weight: 800; color: var(--text-main); }
-  p { color: var(--text-muted); }
+  gap: 0.5rem;
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  padding: 0.3rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #a5b4fc;
+  letter-spacing: 0.05em;
+  width: fit-content;
 }
-.admin-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1.25rem;
-  margin-bottom: 2.5rem;
+
+.badge-icon {
+  font-size: 0.9rem;
 }
-.stat-card {
-  padding: 1.25rem;
-  border-radius: var(--radius-md);
-  background: var(--bg-card-hover);
-  border: 1px solid var(--border-color);
+
+.hero-title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.hero-subtitle {
+  font-size: 0.95rem;
+  color: #94a3b8;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.hero-right {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  &__num { font-size: 2.2rem; font-weight: 800; color: var(--primary); }
-  &__label { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
 }
-.admin-table-section {
+
+.session-card {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  h3 { font-size: 1.1rem; color: var(--text-main); font-weight: 700; }
+  gap: 0.75rem;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1rem 1.25rem;
+  border-radius: 14px;
 }
-.modal-form {
+
+.session-user {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.session-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #818cf8;
+}
+
+.session-meta {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+}
+
+.session-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.session-role {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #fbbf24;
+}
+
+.session-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: #34d399;
+  font-weight: 600;
+}
+
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  background: #10b981;
+  border-radius: 50%;
+  box-shadow: 0 0 10px #10b981;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+@media (max-width: 900px) {
+  .admin-page__hero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 </style>

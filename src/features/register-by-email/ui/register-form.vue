@@ -25,7 +25,7 @@ const name = ref<string>('')
 const email = ref<string>('')
 const password = ref<string>('')
 const confirmPassword = ref<string>('')
-const role = ref<'student' | 'teacher'>('student')
+const role = ref<'student' | 'author'>('student')
 const showPassword = ref<boolean>(false)
 // #endregion refs
 
@@ -89,10 +89,10 @@ const onSubmit = (): void => {
       <button
         type="button"
         class="register-form__role-btn"
-        :class="{ 'register-form__role-btn--active': role === 'teacher' }"
-        @click="role = 'teacher'"
+        :class="{ 'register-form__role-btn--active': role === 'author' }"
+        @click="role = 'author'"
       >
-        <span>👨‍🏫 Преподаватель</span>
+        <span>✍️ Автор курсов</span>
       </button>
     </div>
 

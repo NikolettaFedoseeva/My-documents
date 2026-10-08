@@ -32,6 +32,7 @@ const emit = defineEmits<{
   (e: 'update:searchQuery', query: string): void
   (e: 'selectCourse', courseId: string): void
   (e: 'toggleCourseDropdown'): void
+  (e: 'openDeckTrainer'): void
 }>()
 // #endregion defineEmits
 
@@ -153,6 +154,21 @@ const onInputSearch = (event: Event): void => {
         <span class="progress-chip streak-chip" title="Дней активности подряд">🔥 {{ progressStore.streakDays }} дн.</span>
       </div>
     </div>
+
+    <!-- Кнопка тренировки колоды карточек курса -->
+    <button
+      type="button"
+      class="docs-sidebar__train-deck-btn"
+      title="Запустить тренировку 3D-флешкарт курса"
+      @click="emit('openDeckTrainer')"
+    >
+      <span class="train-icon">🧠</span>
+      <div class="train-label-wrap">
+        <span class="train-label">Тренировать колоду курса</span>
+        <span class="train-sub">3D Active Recall • Focus</span>
+      </div>
+      <span class="train-arrow">▶</span>
+    </button>
 
     <!-- Заголовок карты знаний -->
     <div class="docs-sidebar__title-bar">
@@ -366,6 +382,55 @@ const onInputSearch = (event: Event): void => {
         color: #f87171;
         border: 1px solid rgba(239, 68, 68, 0.3);
       }
+    }
+  }
+
+  &__train-deck-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(168, 85, 247, 0.25) 100%);
+    border: 1px solid rgba(168, 85, 247, 0.4);
+    padding: 0.75rem 0.9rem;
+    border-radius: var(--radius-sm, 12px);
+    margin-bottom: 1.1rem;
+    cursor: pointer;
+    color: #ffffff;
+    transition: all 0.2s ease;
+    text-align: left;
+
+    &:hover {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.35) 0%, rgba(168, 85, 247, 0.4) 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.3);
+      border-color: rgba(168, 85, 247, 0.6);
+    }
+
+    .train-icon {
+      font-size: 1.25rem;
+    }
+
+    .train-label-wrap {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .train-label {
+      font-size: 0.825rem;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .train-sub {
+      font-size: 0.68rem;
+      color: #c7d2fe;
+    }
+
+    .train-arrow {
+      font-size: 0.75rem;
+      color: #a855f7;
     }
   }
 

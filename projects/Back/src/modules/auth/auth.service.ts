@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
-import { supabase } from '../../config/supabase'
+import { supabase, supabaseAdmin } from '../../config/supabase'
 import { LoginDto, RegisterDto, ResetPasswordDto, UserRecord, JwtPayload } from '../../types'
 
 // Локальное хранилище пользователей (для fallback/эмуляции при отсутствии прямой связи с Supabase DB)
@@ -27,9 +27,9 @@ export class AuthService {
     const salt = await bcrypt.genSalt(10)
     const passwordHash = await bcrypt.hash(password, salt)
 
-    // Попытка сохранения в Supabase DB
+    // Сохранение в Supabase DB через административный клиент
     try {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseAdmin
         .from('users')
         .insert([
           {
@@ -101,7 +101,7 @@ export class AuthService {
 
     // Проверка через Supabase DB
     try {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseAdmin
         .from('users')
         .select('*')
         .eq('email', email.toLowerCase())

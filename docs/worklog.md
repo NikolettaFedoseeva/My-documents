@@ -6,6 +6,81 @@
 
 ## 📅 Хронология работ
 
+### [2026-10-08] — Этап 9: Полноэкранный Тренажёр колоды знаний (Active Recall Deck Trainer & Focus Mode)
+
+#### 🎯 Цель:
+Реализовать флагманский образовательный инструмент платформы LERN — полноэкранный фокус-режим тренировки карточек долговременной памяти (Active Recall) со случайным перемешиванием колоды, 3D-переворотом, оценкой сложности, комбо-стриками, начислением опыта и итоговым экраном триумфа.
+
+#### 🧠 Архитектурные решения (FSD):
+1. **Слой `entities/doc`**:
+   - В интерфейсы `DocFlashcardData` добавлен алиас `DocFlashcard`.
+   - В `useDocProgressStore` внедрен метод `addBonusXp(amount)` для начисления динамических комбо-бонусов за серии правильных ответов.
+2. **Слой `features/train-deck`**:
+   - `types/index.ts`: контракты данных `DeckCard`, `FlashcardRating`, `TrainingSessionStats`.
+   - `model/use-deck-trainer.ts`: реактивный composable управления тренировкой:
+     - Загрузка и сбор карточек из выбранного курса или всей платформы с перемешиванием (Fisher-Yates shuffle).
+     - Таймер тренировки сессии (секундомер).
+     - Расчет динамического комбо (🔥 x2..x5 Combo) с множителем очков опыта.
+     - Алгоритм интервального закрепления: карточки со статусом `🔴 Повторить` автоматически добавляются в конец колоды, пока студент не усвоит их.
+     - Горячие клавиши (Keyboard Navigation): `Space/Enter` (переворот), `1/2/3` (оценка), `H` (подсказка), `Esc` (выход).
+   - `ui/deck-trainer-modal.vue`: кинематографичный полноэкранный интерфейс:
+     - Космический полупрозрачный фон с неоновыми сферами.
+     - 3D-флешкарта с плавной перспективой `rotateY(180deg)`.
+     - Раскрывающаяся подсказка по клику или клавише `H`.
+     - Экран триумфа (Session Summary) с трофеем, бейджем опыта `+XP`, детальной статистикой и кнопкой «Повторить сложные карточки».
+3. **Точки входа в тренировку**:
+   - В Личном Кабинете студента (`widgets/cabinet-dashboard/ui/cabinet-courses-tab.vue`): кнопка «🧠 Тренировка памяти Active Recall» в шапке курсов.
+   - В Bookish Codex читалке (`widgets/docs-viewer/ui/docs-sidebar.vue`): кнопка «🧠 Тренировать колоду курса» с привязкой к активному курсу.
+
+---
+
+### [2026-10-08] — Этап 8: Полноценная Авторизация, Редиректы и Сессия (`/auth`)
+
+#### 🎯 Цель:
+Связать экран авторизации и регистрации (`/auth`) с глобальным хранилищем сессий `useUserSessionStore`, поддержать возврат на запрашиваемую страницу (`?redirect=...`), добавить ролевой выбор при регистрации и быстрый демо-вход для тестирования.
+
+#### 🧠 Архитектурные решения (FSD):
+1. **Слой `entities/auth`**:
+   - В `RegisterPayload` добавлена поддержка роли `'author'`.
+   - В `AuthApiService`: методы `login` и `register` синхронизированы с реестром пользователей `UserApiService` (`lern_admin_users_v1`). При вводе email известных аккаунтов (`admin@lern.dev`, `alex.author@lern.dev`, `student@lern.dev`) возвращается соответствующая роль, аватар и XP.
+   - Новые зарегистрированные пользователи автоматически добавляются в базу пользователей платформы.
+2. **Слой `features/register-by-email`**:
+   - В компоненте `RegisterForm` обновлен переключатель ролей: «👨‍🎓 Студент» (обучение, тренажеры, XP) и «✍️ Автор курсов» (конструктор и создание дисциплин).
+3. **Слой `widgets/auth-card`**:
+   - `auth-card.vue`: подключен `useRoute()`, `useRouter()` и `useUserSessionStore()`.
+   - Поддержка `?redirect=...`: после успешного входа или регистрации пользователь направляется именно на тот маршрут, с которого его перенаправило (например, `/author` или `/admin`), либо на домашнюю страницу своей роли (`/cabinet` для студента, `/author` для автора, `/admin` для админа).
+   - Информационный баннер `redirectNotice` с понятным текстом причины перенаправления («Для перехода в Студию автора войдите в аккаунт»).
+   - Блок «⚡ Быстрый вход для тестирования»: кнопки мгновенного входа в 1 клик под ролями `🎓 Студент`, `✍️ Автор`, `👑 Админ`.
+   - Эмуляция входа через соцсети (GitHub, Google, Yandex) с авто-созданием профиля.
+4. **Слой `pages/auth`**:
+   - Исправлена опечатка в стилях `auth-page.vue` (`box-sizing`).
+
+---
+
+### [2026-10-08] — Этап 7: Панель Администратора, Модерация курсов и Аналитика (`/admin`)
+
+#### 🎯 Цель:
+Разработать и внедрить полнофункциональную, визуально выразительную Панель Администратора платформы LERN: управление ролями пользователей в реальном времени, модерация курсов авторов, платформа KPI-аналитики и системные настройки с возможностью безопасного сброса демо-состояния.
+
+#### 🧠 Архитектурные решения (FSD):
+1. **Слой `entities/user`**:
+   - Расширен интерфейс `User` (`createdAt`, `isBanned`).
+   - В `UserApiService` реализовано чтение и запись пользователей платформы с персистентностью в `localStorage` (`lern_admin_users_v1`).
+   - Добавлены методы `getAllUsers()`, `updateUserRole(userId, newRole)` и `toggleUserBan(userId)`.
+2. **Слой `widgets/admin-dashboard`**:
+   - `model/use-admin-dashboard.ts`: единый реактивный composable для управления вкладками, фильтрацией, пагинацией, изменением ролей, модерацией курсов и системными настройками.
+   - `ui/admin-users-tab.vue`: витрина пользователей с аватарами, уровнями, XP, статусом онлайна, интерактивным выпадающим селектором смены роли и действием блокировки.
+   - `ui/admin-courses-tab.vue`: реестр курсов платформы со структурой (модули/главы), автором, переключателем публикации в 1 клик (`Опубликован` ↔ `Скрыт`), быстрым просмотром в читалке и удалением.
+   - `ui/admin-analytics-tab.vue`: KPI-метрики со свечением (пользователи по ролям, опубликованные курсы, статьи, выученные 3D-флешкарты) и визуализацией динамики посещаемости.
+   - `ui/admin-settings-tab.vue`: управление флагами системы (открытая регистрация, роль по умолчанию, режим техобслуживания) и «Опасная зона» для сброса демо-данных.
+   - `ui/admin-dashboard.vue`: таб-навигация, всплывающие тост-нотификации и обработка состояний загрузки.
+3. **Слой `pages/admin`**:
+   - Обновлен `src/pages/admin/ui/admin-page.vue`: премиальный стеклянный макет со статусным блоком сессии администратора и индикатором Root-доступа.
+4. **Безопасность и RBAC**:
+   - Доступ к маршруту строго защищен навигационным гардом ролевой модели (`roles: ['admin']`). Пользователи с другими ролями перенаправляются на страницу 403 Forbidden с возможностью переключить роль в шапке.
+
+---
+
 ### [2026-10-07] — Багфикс: Навигация к курсам из Личного кабинета (`/cabinet ➔ /docs`)
 
 #### 🎯 Цель:
@@ -265,11 +340,87 @@
 
 ---
 
+### Этап 10. Разработка Backend-сервиса (Node.js + Express + TypeScript + Prisma + SQLite) 🗄️ ⭐
+
+#### 🎯 Цель:
+Создать полноценный микросервис бэкенда платформы LERN, обеспечивающий персистентное хранение пользователей, курсов, глав и прогресса обучения с JWT-авторизацией и отказоустойчивым подключением к фронтенду.
+
+#### 🧠 Архитектурные решения:
+1. **Стек Backend (`c:/projects/lern/lern_backend`)**:
+   - **Среда & Фреймворк**: Node.js 22, Express, TypeScript, tsx для hot-reload.
+   - **База данных & ORM**: SQLite (`prisma/dev.db`), Prisma ORM 5.22.
+   - **Порт**: 5000 (соответствует конфигурации `AuthApiService` во фронтенде).
+   - **Безопасность**: JWT (`jsonwebtoken`, срок 7 дней) + хэширование паролей солью (`bcryptjs`) + Middleware проверки ролей (RBAC).
+2. **Модули API**:
+   - `auth`: `/api/auth/register`, `/api/auth/login`, `/api/auth/me`, `/api/auth/forgot-password`.
+   - `users`: `/api/users` (поиск, фильтрация по ролям, смена ролей, бан, удаление).
+   - `courses`: `/api/courses`, `/api/courses/categories`, `/api/courses/docs` (полная иерархия курсов, модулей, глав с флешкартами и квизами).
+   - `progress`: `/api/progress/me`, `/api/progress/toggle-chapter`, `/api/progress/xp`, `/api/progress/master-flashcard`.
+3. **Сидирование базы данных (`prisma/seed.ts`)**:
+   - Стандартные пользователи: `admin@lern.ru` (`admin123`), `author@lern.ru` (`author123`), `student@lern.ru` (`student123`).
+   - Базовые курсы платформы (Vue 3, TypeScript Pro, Feature-Sliced Design).
+4. **Фронтенд-интеграция (`lern_host`)**:
+   - Разработан [`DocHttpRepository`](file:///c:/projects/lern/lern_host/src/entities/doc/api/doc-http-repository.ts), реализующий контракт `DocRepository`.
+   - Настроен автоматический бесшовный fallback на `DocLocalRepository` (LocalStorage) при отсутствии связи с бэкендом.
+   - Обновлен [`UserApiService`](file:///c:/projects/lern/lern_host/src/entities/user/api/user-api.ts) для прямого обращения к `/api/users` и `/api/auth/me`.
+
+#### 📁 Созданные и затронутые файлы:
+- `c:/projects/lern/lern_backend/` — микросервис бэкенда.
+  - `package.json`, `tsconfig.json`, `.env`
+  - `prisma/schema.prisma`, `prisma/seed.ts`
+  - `src/config/env.ts`, `src/db/prisma.ts`
+  - `src/middleware/auth.middleware.ts`, `src/middleware/error.middleware.ts`
+  - `src/modules/auth/*`, `src/modules/users/*`, `src/modules/courses/*`, `src/modules/progress/*`
+  - `src/app.ts`, `src/index.ts`
+- `c:/projects/lern/lern_host/`:
+  - `src/entities/doc/api/doc-http-repository.ts` — HTTP-репозиторий курсов.
+  - `src/entities/doc/api/doc-api.ts` — подключение `DocHttpRepository`.
+  - `src/entities/user/api/user-api.ts` — интеграция пользователей с REST API.
+  - `docs/tasks.md` & `docs/worklog.md` — актуализация документации.
+
+---
+
+### Этап 11. Миграция в облако Supabase PostgreSQL (`gywehqprnrnxqxtxskyf.supabase.co`) ☁️ 🚀 ⭐
+
+#### 🎯 Цель:
+Перевести персистентный слой базы данных образовательной платформы LERN в реальное облако Supabase PostgreSQL с сохранением безопасного бэкенда (`Express + TypeScript`), исключающего клиентские уязвимости и гарантирующего строгую бизнес-логику.
+
+#### 🧠 Архитектурные решения:
+1. **Облачный проект**:
+   - URL: `https://gywehqprnrnxqxtxskyf.supabase.co`
+   - Настоящие ключи: `sb_publishable_...` (публичный) и `sb_secret_...` (сервисный).
+2. **Схема данных в Supabase (PostgreSQL + RLS)**:
+   - Созданы таблицы: `public.users`, `public.courses`, `public.categories`, `public.docs`, `public.user_progress`.
+   - Включен Row Level Security (RLS) с публичными политиками доступа для взаимодействия с API.
+3. **Серверный слой (`c:/projects/lern/lern_host/projects/Back`)**:
+   - Подключен клиент `@supabase/supabase-js` с разделением на `supabase` (анонимный) и `supabaseAdmin` (`SUPABASE_SERVICE_ROLE_KEY` для серверных операций).
+   - Модули:
+     - `auth`: регистрация пользователей, bcrypt хэширование паролей, логин, JWT (7 дней).
+     - `users`: чтение с поиском/фильтрами, смена ролей, бан, редактирование профилей.
+     - `courses`: иерархический сбор дерева курсов, модулей, глав, флешкарт и квизов.
+     - `progress`: сохранение завершенных глав, комбо-опыта и освоенных флешкарт.
+4. **Облачное наполнение (Сиды)**:
+   - Пользователи: `admin@lern.ru` (`admin123`), `student@lern.ru` (`student123`).
+   - Курсы: **Vue 3 & Composition API**, **TypeScript Pro**, **Feature-Sliced Design**.
+5. **Сквозная интеграция**:
+   - Бэкенд запущен на `http://localhost:5000` и обращается к `gywehqprnrnxqxtxskyf.supabase.co`.
+   - Фронтенд (`lern_host`) прозрачно обращается к бэкенду через [`DocHttpRepository`](file:///c:/projects/lern/lern_host/src/entities/doc/api/doc-http-repository.ts) и [`UserApiService`](file:///c:/projects/lern/lern_host/src/entities/user/api/user-api.ts).
+
+#### 📁 Затронутые и созданные файлы:
+- `projects/Back/`:
+  - `supabase-schema.sql` — SQL-схема таблиц и RLS для Supabase.
+  - `.env` — боевая конфигурация с ключами Supabase.
+  - `src/config/supabase.ts` — клиенты `supabase` и `supabaseAdmin`.
+  - `src/modules/auth/*` — сервис и контроллер авторизации на Supabase.
+  - `src/modules/users/*` — сервис и контроллер пользователей.
+  - `src/modules/courses/*` — сервис и контроллер курсов и базы знаний.
+  - `src/modules/progress/*` — сервис и контроллер прогресса обучения.
+  - `src/index.ts` — точка входа с подключением всех роутов.
+- `docs/tasks.md` & `docs/worklog.md` — актуализация документации.
+
+---
+
 ## 🔮 Следующие шаги:
-1. **Разработка Backend-сервиса (API / PostgreSQL)**:
-   - Спроектировать таблицы базы данных (`courses`, `modules`, `chapters`, `users`, `progress`).
-   - Реализовать `DocHttpRepository` для отправки и синхронизации курсов с сервером.
+1. **Интерактивные задания в кабинете (`/cabinet`)** (сдача кода / ссылки на репозиторий, статус проверки).
 2. **Экспорт / Импорт курсов в JSON** (локальный перенос и бэкапы).
-
-
-
+3. **Расширение UI-кита графиками активности (`UiChart` / `UiActivityCalendar`)**.

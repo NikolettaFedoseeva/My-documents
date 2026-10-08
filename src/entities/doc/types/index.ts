@@ -30,6 +30,8 @@ export interface DocFlashcardData {
   hint?: string
 }
 
+export type DocFlashcard = DocFlashcardData
+
 export interface DocQuizOption {
   id: string
   label: string

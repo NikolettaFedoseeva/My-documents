@@ -1,4 +1,4 @@
-﻿.DS_Store
+.DS_Store
 node_modules
 **/node_modules
 /dist
@@ -9,6 +9,8 @@ node_modules
 package-lock.json
 
 # local env files
+.env
+**/.env
 .env.local
 .env.*.local
 

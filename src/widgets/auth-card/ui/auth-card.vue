@@ -1,18 +1,21 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import {
   AuthMode,
   LoginPayload,
   RegisterPayload,
   AuthApiService,
 } from '@/entities/auth'
+import { useUserSessionStore, UserRole } from '@/entities/user'
 import AuthCardTabs from './auth-card-tabs.vue'
 import { LoginForm } from '@/features/login-by-email'
 import { RegisterForm } from '@/features/register-by-email'
 import { SocialAuthButtons } from '@/features/social-auth'
 
 const router = useRouter()
+const route = useRoute()
+const sessionStore = useUserSessionStore()
 
 // #region refs
 const activeMode = ref<AuthMode>('login')
@@ -22,6 +25,24 @@ const successMessage = ref<string>('')
 const forgotEmail = ref<string>('')
 // #endregion refs
 
+// #region computed (Редирект и подсказки)
+const redirectUrl = computed<string>(() => (route.query.redirect as string) || '')
+
+const redirectNotice = computed<string>(() => {
+  if (!redirectUrl.value) return ''
+  if (redirectUrl.value.includes('/author')) {
+    return '✍️ Для доступа к Студии автора войдите в аккаунт автора или зарегистрируйтесь'
+  }
+  if (redirectUrl.value.includes('/admin')) {
+    return '👑 Для входа в Панель администратора требуется учетная запись администратора'
+  }
+  if (redirectUrl.value.includes('/cabinet')) {
+    return '🎓 Для просмотра Личного кабинета и прогресса войдите в аккаунт'
+  }
+  return '🔒 Для перехода к запрашиваемой странице требуется авторизация'
+})
+// #endregion computed
+
 // #region Функции
 const changeMode = (mode: AuthMode): void => {
   activeMode.value = mode
@@ -29,16 +50,40 @@ const changeMode = (mode: AuthMode): void => {
   successMessage.value = ''
 }
 
+const resolveRedirectTarget = (role: UserRole): string => {
+  if (redirectUrl.value) {
+    return redirectUrl.value
+  }
+  if (role === 'author' || role === 'teacher') return '/author'
+  if (role === 'admin') return '/admin'
+  return '/cabinet'
+}
+
 const handleLogin = async (payload: LoginPayload): Promise<void> => {
   isSubmitting.value = true
   errorMessage.value = ''
   try {
     const res = await AuthApiService.login(payload)
-    if (res.success) {
-      successMessage.value = 'Успешный вход! Переходим в личный кабинет...'
+    if (res.success && res.user) {
+      sessionStore.loginAs({
+        id: res.user.id,
+        name: res.user.name,
+        email: res.user.email,
+        role: res.user.role,
+        avatar:
+          res.user.avatar ||
+          'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80',
+        status: 'online',
+        unreadNotificationsCount: 1,
+        xp: res.user.xp || 100,
+        level: res.user.level || 1,
+      })
+
+      const target = resolveRedirectTarget(res.user.role)
+      successMessage.value = `Успешный вход (${res.user.name})! Перенаправление...`
       setTimeout(() => {
-        router.push('/cabinet')
-      }, 1000)
+        router.push(target)
+      }, 700)
     } else {
       errorMessage.value = res.errorMessage || 'Ошибка входа'
     }
@@ -54,11 +99,26 @@ const handleRegister = async (payload: RegisterPayload): Promise<void> => {
   errorMessage.value = ''
   try {
     const res = await AuthApiService.register(payload)
-    if (res.success) {
-      successMessage.value = 'Аккаунт успешно создан! Добро пожаловать!'
+    if (res.success && res.user) {
+      sessionStore.loginAs({
+        id: res.user.id,
+        name: res.user.name,
+        email: res.user.email,
+        role: res.user.role,
+        avatar:
+          res.user.avatar ||
+          'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80',
+        status: 'online',
+        unreadNotificationsCount: 1,
+        xp: res.user.xp || 100,
+        level: res.user.level || 1,
+      })
+
+      const target = resolveRedirectTarget(res.user.role)
+      successMessage.value = `Добро пожаловать в LERN, ${res.user.name}! Перенаправление...`
       setTimeout(() => {
-        router.push('/cabinet')
-      }, 1200)
+        router.push(target)
+      }, 800)
     } else {
       errorMessage.value = res.errorMessage || 'Ошибка регистрации'
     }
@@ -67,6 +127,15 @@ const handleRegister = async (payload: RegisterPayload): Promise<void> => {
   } finally {
     isSubmitting.value = false
   }
+}
+
+const handleQuickDemoLogin = (role: UserRole): void => {
+  sessionStore.switchRole(role)
+  const target = resolveRedirectTarget(role)
+  successMessage.value = `Вход под ролью «${sessionStore.currentRoleInfo.name}»...`
+  setTimeout(() => {
+    router.push(target)
+  }, 600)
 }
 
 const handleForgotPassword = async (): Promise<void> => {
@@ -85,10 +154,24 @@ const handleForgotPassword = async (): Promise<void> => {
 }
 
 const handleSocialAuth = (provider: string): void => {
-  successMessage.value = `Вход через ${provider.toUpperCase()}...`
+  const mockUserRole: UserRole = redirectUrl.value.includes('/author') ? 'author' : 'student'
+  sessionStore.loginAs({
+    id: `usr-soc-${Date.now()}`,
+    name: `${provider.toUpperCase()} Пользователь`,
+    email: `user@${provider}.com`,
+    role: mockUserRole,
+    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80',
+    status: 'online',
+    unreadNotificationsCount: 0,
+    xp: 200,
+    level: 2,
+  })
+
+  const target = resolveRedirectTarget(mockUserRole)
+  successMessage.value = `Вход через ${provider.toUpperCase()} успешен!`
   setTimeout(() => {
-    router.push('/cabinet')
-  }, 1000)
+    router.push(target)
+  }, 600)
 }
 // #endregion Функции
 </script>
@@ -101,11 +184,53 @@ const handleSocialAuth = (provider: string): void => {
         <span class="auth-card__title">LERN</span>
       </div>
       <p class="auth-card__subtitle">
-        {{ activeMode === 'login' ? 'Войдите в свою учетную запись' : activeMode === 'register' ? 'Создайте новый аккаунт на платформе' : 'Восстановление доступа к аккаунту' }}
+        {{
+          activeMode === 'login'
+            ? 'Войдите в свою учетную запись'
+            : activeMode === 'register'
+            ? 'Создайте новый аккаунт на платформе'
+            : 'Восстановление доступа к аккаунту'
+        }}
       </p>
     </header>
 
-    <!-- Табы только для Login / Register -->
+    <!-- Предупреждение о необходимости входа для доступа к странице (Redirect Notice) -->
+    <div v-if="redirectNotice" class="auth-card__redirect-notice">
+      <span>{{ redirectNotice }}</span>
+    </div>
+
+    <!-- Быстрый демо-вход для мгновенного тестирования -->
+    <div v-if="activeMode !== 'forgot'" class="auth-card__quick-box">
+      <span class="auth-card__quick-title">⚡ Быстрый вход для тестирования ролей:</span>
+      <div class="auth-card__quick-buttons">
+        <button
+          type="button"
+          class="btn-quick btn-quick--student"
+          title="Войти как Студент"
+          @click="handleQuickDemoLogin('student')"
+        >
+          <span>🎓 Студент</span>
+        </button>
+        <button
+          type="button"
+          class="btn-quick btn-quick--author"
+          title="Войти как Автор"
+          @click="handleQuickDemoLogin('author')"
+        >
+          <span>✍️ Автор</span>
+        </button>
+        <button
+          type="button"
+          class="btn-quick btn-quick--admin"
+          title="Войти как Администратор"
+          @click="handleQuickDemoLogin('admin')"
+        >
+          <span>👑 Админ</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Табы Login / Register -->
     <AuthCardTabs
       v-if="activeMode !== 'forgot'"
       :active-mode="activeMode"
@@ -168,7 +293,7 @@ const handleSocialAuth = (provider: string): void => {
       </button>
     </div>
 
-    <!-- Социальные сети (кроме формы сброса) -->
+    <!-- Социальные сети -->
     <SocialAuthButtons
       v-if="activeMode !== 'forgot'"
       @select-provider="handleSocialAuth"
@@ -179,7 +304,7 @@ const handleSocialAuth = (provider: string): void => {
 <style scoped lang="scss">
 .auth-card {
   width: 100%;
-  max-width: 440px;
+  max-width: 460px;
   background: rgba(15, 23, 42, 0.75);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
@@ -189,7 +314,7 @@ const handleSocialAuth = (provider: string): void => {
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(99, 102, 241, 0.15);
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.25rem;
   color: #f8fafc;
 
   &__header {
@@ -221,6 +346,39 @@ const handleSocialAuth = (provider: string): void => {
     font-size: 0.875rem;
     color: #94a3b8;
     margin: 0;
+  }
+
+  &__redirect-notice {
+    background: rgba(99, 102, 241, 0.15);
+    border: 1px solid rgba(99, 102, 241, 0.35);
+    color: #c7d2fe;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.65rem 0.85rem;
+    border-radius: 10px;
+    line-height: 1.4;
+  }
+
+  &__quick-box {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px dashed rgba(255, 255, 255, 0.15);
+    padding: 0.75rem 0.85rem;
+    border-radius: 12px;
+  }
+
+  &__quick-title {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    font-weight: 600;
+  }
+
+  &__quick-buttons {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.4rem;
   }
 
   &__success {
@@ -309,6 +467,41 @@ const handleSocialAuth = (provider: string): void => {
     &:hover {
       color: #ffffff;
     }
+  }
+}
+
+.btn-quick {
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.4rem 0.5rem;
+  border-radius: 8px;
+  color: #e2e8f0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+
+  &--student:hover {
+    background: rgba(16, 185, 129, 0.2);
+    border-color: rgba(16, 185, 129, 0.4);
+    color: #6ee7b7;
+  }
+
+  &--author:hover {
+    background: rgba(168, 85, 247, 0.2);
+    border-color: rgba(168, 85, 247, 0.4);
+    color: #e9d5ff;
+  }
+
+  &--admin:hover {
+    background: rgba(234, 179, 8, 0.2);
+    border-color: rgba(234, 179, 8, 0.4);
+    color: #fef08a;
   }
 }
 </style>

@@ -11,12 +11,11 @@ import type {
   UpdateCourseDto,
 } from '../types'
 import type { DocRepository } from './doc-repository.interface'
-import { DocLocalRepository } from './doc-local-repository'
+import { DocHttpRepository } from './doc-http-repository'
 
-// Экземпляр репозитория базы знаний.
-// В будущем при переходе на бэкенд достаточно подставить:
-// const repository: DocRepository = new DocSupabaseRepository()
-const repository: DocRepository = new DocLocalRepository()
+// Экземпляр репозитория базы знаний:
+// Использует реальный REST API бэкенд на порту 5000 с автоматическим fallback на LocalStorage при оффлайне.
+const repository: DocRepository = new DocHttpRepository()
 
 export class DocApiService {
   // #region Курсы

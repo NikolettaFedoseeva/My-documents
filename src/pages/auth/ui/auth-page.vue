@@ -25,7 +25,7 @@ import { AuthCard } from '@/widgets/auth-card'
   background: #090d16;
   padding: 2rem 1rem;
   overflow: hidden;
-  box-sizing: border-border-box;
+  box-sizing: border-box;
 
   &__content {
     position: relative;
