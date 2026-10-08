@@ -171,6 +171,106 @@ export class CoursesService {
     return { success: true }
   }
 
+  static async importCourse(courseData: any, overwrite = false) {
+    let slug = courseData.slug || `course-${Date.now()}`
+    let courseId = courseData.id || `course-${slug}`
+
+    // Проверяем, существует ли уже курс с таким id или slug
+    const existing = (await this.getCourseByIdOrSlug(courseId).catch(() => null))
+      || (await this.getCourseByIdOrSlug(slug).catch(() => null))
+
+    if (existing) {
+      if (overwrite) {
+        courseId = existing.id
+        slug = existing.slug
+        // Очищаем старые категории и статьи курса для чистой перезаписи
+        const { data: oldCats } = await supabaseAdmin.from('categories').select('id').eq('course_id', courseId)
+        if (oldCats && oldCats.length > 0) {
+          const oldCatIds = oldCats.map((c: any) => c.id)
+          await supabaseAdmin.from('docs').delete().in('category_id', oldCatIds)
+          await supabaseAdmin.from('categories').delete().eq('course_id', courseId)
+        }
+        await supabaseAdmin
+          .from('courses')
+          .update({
+            title: courseData.title,
+            description: courseData.description || '',
+            badge: courseData.badge || 'PRO',
+            icon: courseData.icon || '📘',
+            order: courseData.order || 0,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', courseId)
+      } else {
+        // Создаем копию с уникальным slug и id
+        const suffix = Math.random().toString(36).substring(2, 7)
+        slug = `${slug}-copy-${suffix}`
+        courseId = `course-${slug}`
+        await supabaseAdmin.from('courses').insert([
+          {
+            id: courseId,
+            slug,
+            title: `${courseData.title} (Копия)`,
+            description: courseData.description || '',
+            badge: courseData.badge || 'PRO',
+            icon: courseData.icon || '📘',
+            order: (courseData.order || 0) + 1,
+          },
+        ])
+      }
+    } else {
+      await supabaseAdmin.from('courses').insert([
+        {
+          id: courseId,
+          slug,
+          title: courseData.title,
+          description: courseData.description || '',
+          badge: courseData.badge || 'PRO',
+          icon: courseData.icon || '📘',
+          order: courseData.order || 0,
+        },
+      ])
+    }
+
+    // Сохраняем модули и статьи
+    const modules = courseData.modules || []
+    for (let catIdx = 0; catIdx < modules.length; catIdx++) {
+      const cat = modules[catIdx]
+      const catId = overwrite && cat.id ? cat.id : `cat-${Date.now()}-${catIdx}-${Math.random().toString(36).substring(2, 5)}`
+      await supabaseAdmin.from('categories').insert([
+        {
+          id: catId,
+          course_id: courseId,
+          title: cat.title || `Модуль ${catIdx + 1}`,
+          description: cat.description || '',
+          icon: cat.icon || '📁',
+          order: catIdx + 1,
+        },
+      ])
+
+      const items = cat.items || []
+      for (let docIdx = 0; docIdx < items.length; docIdx++) {
+        const item = items[docIdx]
+        const docId = overwrite && item.id ? item.id : `doc-${Date.now()}-${catIdx}-${docIdx}-${Math.random().toString(36).substring(2, 5)}`
+        await supabaseAdmin.from('docs').insert([
+          {
+            id: docId,
+            category_id: catId,
+            title: item.title || `Глава ${docIdx + 1}`,
+            description: item.description || '',
+            content: item.sections || item.content || [],
+            tags: item.tags || [],
+            interactive_flashcards: item.flashcard || item.interactive_flashcards || null,
+            quiz_questions: item.quiz || item.quiz_questions || null,
+            order: docIdx + 1,
+          },
+        ])
+      }
+    }
+
+    return this.getCourseByIdOrSlug(courseId)
+  }
+
   private static formatCourse(course: any) {
     const formattedCategories = (course.categories || []).map((c: any) => this.formatCategory(c))
     const totalChapters = formattedCategories.reduce((acc: number, cat: any) => acc + (cat.items?.length || 0), 0)

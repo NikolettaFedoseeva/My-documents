@@ -453,7 +453,52 @@
 
 ---
 
+### [2026-10-08] — Этап 13: Экспорт и Импорт курсов в JSON 📥 📤 ⭐
+
+#### 🎯 Цель:
+Реализовать полноценную систему выгрузки (экспорта) и загрузки (импорта) курсов и баз знаний платформы LERN в формате JSON для локального резервного копирования, обмена курсами между преподавателями и мгновенного переноса готовых учебных материалов.
+
+#### 🧠 Архитектурные решения:
+1. **Утилиты передачи данных (`src/widgets/author-studio/model/course-transfer.ts`)**:
+   - `downloadJsonFile`: генерация `Blob` с `application/json` и инициирование скачивания в браузере.
+   - `exportSingleCourse`: выгрузка одного выбранного курса со всеми вложенными модулями, главами, секциями, флешкартами и квизами (`lern-course-[slug]-[date].json`).
+   - `exportAllCoursesBackup`: экспорт архива всех курсов базы знаний с метаданными платформы (`lern-courses-backup-[date].json`).
+   - `parseAndValidateCourseJson`: синтаксический анализ, валидация полей, нормализация модулей и глав, автоматическое обнаружение коллизий ID/слага с уже существующими дисциплинами.
+2. **Слой данных и репозиториев (`DocRepository` / `DocApiService` / `projects/Back`)**:
+   - Контракт `importCourse(course, options)` добавлен в `DocRepository`.
+   - В `DocLocalRepository` реализовано сохранение импортированного курса с автогенерацией уникальных ID при копировании и обновлением существующих при перезаписи.
+   - В `DocHttpRepository` и REST API бэкенда (`POST /api/courses/import`) реализовано сохранение импортированного курса прямо в облачный **Supabase** (`courses`, `categories`, `docs`)!
+3. **Пользовательский интерфейс Студии автора**:
+   - `AuthorCoursesBoard`:
+     - Кнопка «📥 Экспорт» на каждой карточке курса.
+     - Кнопки «📥 Экспорт всех» и «📤 Импорт JSON» в верхней панели действий.
+   - `AuthorStudio`:
+     - Кнопка «📥 Экспорт JSON» в верхней панели активного курса для быстрой выгрузки текущего состояния.
+   - `AuthorImportModal`:
+     - Вкладка 1: Drag-and-drop дропзона файлов `.json` с индикацией размера и имени.
+     - Вкладка 2: Текстовый редактор для вставки сырого JSON.
+     - Интерактивный предпросмотр структуры импортируемого курса (иконка, категория, уровень, количество модулей и глав).
+     - Блок разрешения коллизий: «Создать как копию (Рекомендуется)» vs «Перезаписать существующий курс».
+     - Всплывающие информативные тост-уведомления об успехе операции.
+
+#### 📁 Затронутые и созданные файлы:
+- `src/widgets/author-studio/model/course-transfer.ts` — парсинг, валидация и экспорт курсов.
+- `src/widgets/author-studio/ui/author-import-modal.vue` — модальное окно импорта с drag-and-drop и превью.
+- `src/widgets/author-studio/model/use-author-studio.ts` — интеграция экспорта/импорта в composable студии.
+- `src/widgets/author-studio/ui/author-courses-board.vue` — кнопки экспорта на карточках и в шапке.
+- `src/widgets/author-studio/ui/author-studio.vue` — кнопка экспорта внутри курса и подключение модалки импорта.
+- `src/widgets/author-studio/index.ts` — barrel-экспорт новых сущностей.
+- `src/entities/doc/api/doc-repository.interface.ts` — сигнатура `importCourse`.
+- `src/entities/doc/api/doc-local-repository.ts` — реализация импорта в LocalStorage.
+- `src/entities/doc/api/doc-http-repository.ts` — HTTP-клиент импорта.
+- `src/entities/doc/api/doc-api.ts` — метод `DocApiService.importCourse`.
+- `projects/Back/src/modules/courses/courses.service.ts` — серверный метод импорта в Supabase.
+- `projects/Back/src/modules/courses/courses.controller.ts` — эндпоинт `POST /api/courses/import`.
+- `docs/tasks.md` & `docs/worklog.md` — актуализация проектной документации.
+
+---
+
 ## 🔮 Следующие шаги:
-1. **Экспорт / Импорт курсов в JSON** (локальный перенос и бэкапы в Студии автора).
-2. **Расширение UI-кита графиками активности (`UiChart` / `UiActivityCalendar`)**.
-3. **Звуковые микроэффекты (Web Audio API)** в тренажёре памяти Active Recall.
+1. **Расширение UI-кита графиками активности (`UiChart` / `UiActivityCalendar`)**.
+2. **Звуковые микроэффекты (Web Audio API)** в тренажёре памяти Active Recall.
+

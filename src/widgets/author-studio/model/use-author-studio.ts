@@ -13,6 +13,7 @@ import {
   type CreateCategoryDto,
   type CreateCourseDto,
 } from '@/entities/doc'
+import { exportSingleCourse, exportAllCoursesBackup } from './course-transfer'
 
 export type EditorTab = 'meta' | 'content' | 'flashcard' | 'quiz'
 export type PreviewMode = 'split' | 'editor' | 'preview'
@@ -575,7 +576,71 @@ export function useAuthorStudio() {
       isLoading.value = false
     }
   }
-  // #endregion Сброс к дефолту
+  // #region Экспорт и Импорт курсов
+  const isImportModalOpen = ref<boolean>(false)
+
+  const openImportModal = (): void => {
+    isImportModalOpen.value = true
+  }
+
+  const closeImportModal = (): void => {
+    isImportModalOpen.value = false
+  }
+
+  const exportCourse = async (courseId?: string): Promise<void> => {
+    const targetId = courseId || selectedCourseId.value
+    if (!targetId) return
+
+    let targetCourse = courses.value.find((c) => c.id === targetId) || null
+    // Если курс сейчас открыт в редакторе, берем актуальные категории из текущего состояния
+    if (targetCourse && selectedCourseId.value === targetId && categories.value.length > 0) {
+      targetCourse = {
+        ...targetCourse,
+        modules: categories.value,
+        totalChapters: categories.value.reduce((s, m) => s + m.items.length, 0),
+      }
+    } else if (!targetCourse) {
+      targetCourse = await DocApiService.getCourseById(targetId)
+    }
+
+    if (!targetCourse) {
+      alert('Не удалось найти курс для экспорта')
+      return
+    }
+
+    exportSingleCourse(targetCourse)
+    showToast(`Курс «${targetCourse.title}» успешно экспортирован в JSON`)
+  }
+
+  const exportAllCourses = async (): Promise<void> => {
+    if (courses.value.length === 0) {
+      alert('В базе знаний нет курсов для экспорта')
+      return
+    }
+
+    exportAllCoursesBackup(courses.value)
+    showToast(`Резервная копия (${courses.value.length} курсов) успешно сохранена`)
+  }
+
+  const handleImportConfirmed = async (payload: { courses: CourseCodex[]; overwrite: boolean }): Promise<void> => {
+    isLoading.value = true
+    try {
+      let count = 0
+      for (const course of payload.courses) {
+        await DocApiService.importCourse(course, { overwrite: payload.overwrite })
+        count++
+      }
+      await loadCourses()
+      isImportModalOpen.value = false
+      showToast(`Успешно импортировано курсов: ${count}!`)
+    } catch (err: any) {
+      console.error('Ошибка при импорте курса:', err)
+      alert(`Не удалось завершить импорт: ${err?.message || 'ошибка сервера'}`)
+    } finally {
+      isLoading.value = false
+    }
+  }
+  // #endregion Экспорт и Импорт курсов
 
   const showToast = (message: string): void => {
     saveSuccessMessage.value = message
@@ -604,6 +669,14 @@ export function useAuthorStudio() {
     closeCreateCourseModal,
     submitCreateCourse,
     deleteCourse,
+
+    // Экспорт и Импорт
+    isImportModalOpen,
+    openImportModal,
+    closeImportModal,
+    exportCourse,
+    exportAllCourses,
+    handleImportConfirmed,
 
     // Модули и статьи
     categories,

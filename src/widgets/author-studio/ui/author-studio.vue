@@ -6,6 +6,7 @@ import AuthorCoursesBoard from './author-courses-board.vue'
 import AuthorSidebar from './author-sidebar.vue'
 import AuthorEditor from './author-editor.vue'
 import AuthorPreview from './author-preview.vue'
+import AuthorImportModal from './author-import-modal.vue'
 
 const router = useRouter()
 
@@ -23,6 +24,14 @@ const {
   closeCreateCourseModal,
   submitCreateCourse,
   deleteCourse,
+
+  // Экспорт и Импорт
+  isImportModalOpen,
+  openImportModal,
+  closeImportModal,
+  exportCourse,
+  exportAllCourses,
+  handleImportConfirmed,
 
   // Модули и статьи
   categories,
@@ -87,6 +96,9 @@ const onOpenReader = () => {
         @create-course="openCreateCourseModal"
         @delete-course="deleteCourse"
         @reset-defaults="resetAllToDefaults"
+        @export-course="exportCourse"
+        @export-all-courses="exportAllCourses"
+        @open-import-modal="openImportModal"
       />
     </div>
 
@@ -122,6 +134,16 @@ const onOpenReader = () => {
         </transition>
 
         <div class="top-controls__right">
+          <!-- Кнопка экспорта текущего курса в JSON -->
+          <button
+            type="button"
+            class="btn-export-link"
+            title="Экспортировать текущий курс со всеми модулями и главами в JSON"
+            @click="exportCourse(activeCourse?.id)"
+          >
+            <span>📥 Экспорт JSON</span>
+          </button>
+
           <!-- Кнопка перехода в читалку студента -->
           <button
             type="button"
@@ -354,6 +376,14 @@ const onOpenReader = () => {
         </div>
       </div>
     </div>
+
+    <!-- Модальное окно импорта курса / архива -->
+    <AuthorImportModal
+      :is-open="isImportModalOpen"
+      :existing-courses="courses"
+      @close="closeImportModal"
+      @import-confirmed="handleImportConfirmed"
+    />
   </div>
 </template>
 
@@ -495,6 +525,27 @@ const onOpenReader = () => {
   &:hover {
     background: #6366f1;
     color: #ffffff;
+  }
+}
+
+.btn-export-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.9rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-main, #334155);
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border, #cbd5e1);
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: var(--color-bg-alt, #f8fafc);
+    color: #6366f1;
+    border-color: #a5b4fc;
   }
 }
 

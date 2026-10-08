@@ -42,6 +42,10 @@ export class DocApiService {
   static async deleteCourse(id: string): Promise<void> {
     return repository.deleteCourse(id)
   }
+
+  static async importCourse(course: CourseCodex, options?: { overwrite?: boolean }): Promise<CourseCodex> {
+    return repository.importCourse(course, options)
+  }
   // #endregion Курсы
 
   // #region Модули и статьи

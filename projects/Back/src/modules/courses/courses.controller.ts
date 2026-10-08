@@ -125,4 +125,17 @@ coursesRouter.delete('/docs/:id', authMiddleware, requireRoles('admin'), async (
     res.status(400).json({ success: false, errorMessage: err.message })
   }
 })
+
+coursesRouter.post('/import', async (req: Request, res: Response) => {
+  try {
+    const { course, overwrite } = req.body
+    if (!course) {
+      return res.status(400).json({ success: false, errorMessage: 'Данные курса не переданы' })
+    }
+    const imported = await CoursesService.importCourse(course, Boolean(overwrite))
+    res.status(201).json({ success: true, course: imported })
+  } catch (err: any) {
+    res.status(400).json({ success: false, errorMessage: err.message })
+  }
+})
 // #endregion Защищенные маршруты

@@ -22,6 +22,9 @@ const emit = defineEmits<{
   (e: 'create-course'): void
   (e: 'delete-course', courseId: string): void
   (e: 'reset-defaults'): void
+  (e: 'export-course', courseId: string): void
+  (e: 'export-all-courses'): void
+  (e: 'open-import-modal'): void
 }>()
 // #endregion defineEmits
 
@@ -114,6 +117,24 @@ const onOpenReader = (course: CourseCodex) => {
         <button
           type="button"
           class="btn-secondary"
+          title="Импортировать курс из JSON-файла"
+          @click="emit('open-import-modal')"
+        >
+          <span>📤 Импорт JSON</span>
+        </button>
+
+        <button
+          type="button"
+          class="btn-secondary"
+          title="Экспортировать полную резервную копию всех курсов"
+          @click="emit('export-all-courses')"
+        >
+          <span>📥 Экспорт всех</span>
+        </button>
+
+        <button
+          type="button"
+          class="btn-secondary btn-secondary--danger-hover"
           title="Сбросить все курсы к эталонам"
           @click="emit('reset-defaults')"
         >
@@ -253,7 +274,7 @@ const onOpenReader = (course: CourseCodex) => {
             class="action-btn action-btn--edit"
             @click="emit('select-course', course.id)"
           >
-            <span>✏️ Редактировать курс</span>
+            <span>✏️ Редактировать</span>
           </button>
 
           <button
@@ -263,6 +284,15 @@ const onOpenReader = (course: CourseCodex) => {
             @click="onOpenReader(course)"
           >
             <span>👁️ Читать</span>
+          </button>
+
+          <button
+            type="button"
+            class="action-btn action-btn--export"
+            title="Экспортировать курс в JSON"
+            @click="emit('export-course', course.id)"
+          >
+            <span>📥 Экспорт</span>
           </button>
 
           <button
@@ -381,6 +411,11 @@ const onOpenReader = (course: CourseCodex) => {
     background: var(--color-bg-alt, #f8fafc);
     color: var(--color-text-main, #0f172a);
     border-color: #cbd5e1;
+  }
+
+  &--danger-hover:hover {
+    color: #ef4444;
+    border-color: rgba(239, 68, 68, 0.4);
   }
 }
 
@@ -669,13 +704,20 @@ const onOpenReader = (course: CourseCodex) => {
     }
   }
 
-  &--view {
+  &--view,
+  &--export {
     padding: 0.6rem 0.9rem;
     background: var(--color-surface, #ffffff);
     border-color: var(--color-border, #cbd5e1);
     color: var(--color-text-main, #334155);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+
     &:hover {
       background: var(--color-bg-alt, #f1f5f9);
+      color: #6366f1;
+      border-color: #a5b4fc;
     }
   }
 

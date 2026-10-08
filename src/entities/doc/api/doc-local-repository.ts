@@ -215,6 +215,62 @@ export class DocLocalRepository implements DocRepository {
     this.saveData(courses)
     return Promise.resolve()
   }
+
+  async importCourse(course: CourseCodex, options: { overwrite?: boolean } = {}): Promise<CourseCodex> {
+    const courses = this.loadData()
+    const overwrite = options.overwrite ?? false
+
+    // Проверяем наличие курса с тем же ID или Slug
+    const existingIndex = courses.findIndex((c) => c.id === course.id || c.slug === course.slug)
+    let importedCourse: CourseCodex
+
+    if (existingIndex !== -1 && overwrite) {
+      importedCourse = {
+        ...course,
+        totalChapters: (course.modules || []).reduce((sum, m) => sum + (m.items?.length || 0), 0),
+        updatedAt: new Date().toISOString().split('T')[0],
+      }
+      courses[existingIndex] = importedCourse
+    } else {
+      const now = new Date().toISOString().split('T')[0]
+      const needsNewSlug = existingIndex !== -1
+      const newSlug = needsNewSlug
+        ? `${course.slug || 'course'}-copy-${Math.random().toString(36).substring(2, 6)}`
+        : (course.slug || generateSlug(course.title))
+      const newId = needsNewSlug ? generateId('course') : (course.id || generateId('course'))
+
+      // Перегенерируем ID категорий и глав при создании копии, чтобы исключить конфликты
+      const modules: DocCategory[] = (course.modules || []).map((m, mIdx) => {
+        const catId = needsNewSlug ? generateId('cat') : (m.id || generateId('cat'))
+        return {
+          ...m,
+          id: catId,
+          code: m.code || String(mIdx + 1).padStart(2, '0'),
+          items: (m.items || []).map((item, dIdx) => ({
+            ...item,
+            id: needsNewSlug ? generateId('doc') : (item.id || generateId('doc')),
+            categoryId: catId,
+            code: item.code || `${String(mIdx + 1).padStart(2, '0')}.${dIdx + 1}`,
+          })),
+        }
+      })
+
+      importedCourse = {
+        ...course,
+        id: newId,
+        slug: newSlug,
+        title: needsNewSlug ? `${course.title} (Копия)` : course.title,
+        createdAt: course.createdAt || now,
+        updatedAt: now,
+        modules,
+        totalChapters: modules.reduce((sum, m) => sum + m.items.length, 0),
+      }
+      courses.unshift(importedCourse)
+    }
+
+    this.saveData(courses)
+    return Promise.resolve(JSON.parse(JSON.stringify(importedCourse)))
+  }
   // #endregion Методы работы с курсами
 
   // #region Методы работы с модулями и главами

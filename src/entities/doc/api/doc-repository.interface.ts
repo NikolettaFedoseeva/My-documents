@@ -34,6 +34,9 @@ export interface DocRepository {
 
   /** Удалить курс со всеми модулями и главами */
   deleteCourse(id: string): Promise<void>
+
+  /** Импортировать полный курс из JSON-структуры */
+  importCourse(course: CourseCodex, options?: { overwrite?: boolean }): Promise<CourseCodex>
   // #endregion Методы работы с курсами
 
   // #region Методы работы с модулями и главами

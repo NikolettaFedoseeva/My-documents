@@ -119,6 +119,27 @@ export class DocHttpRepository implements DocRepository {
     }
     return this.fallbackRepo.deleteCourse(id)
   }
+
+  async importCourse(course: CourseCodex, options: { overwrite?: boolean } = {}): Promise<CourseCodex> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/import`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify({ course, overwrite: options?.overwrite }),
+      })
+      if (response.ok) {
+        const data = await response.json()
+        if (data.course) {
+          // Синхронизируем с локальным хранилищем для мгновенной доступности офлайн
+          await this.fallbackRepo.importCourse(data.course, options)
+          return data.course as CourseCodex
+        }
+      }
+    } catch (e) {
+      // Fallback
+    }
+    return this.fallbackRepo.importCourse(course, options)
+  }
   // #endregion Методы работы с курсами
 
   // #region Методы работы с модулями и главами
