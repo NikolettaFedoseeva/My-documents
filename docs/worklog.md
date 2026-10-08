@@ -420,7 +420,40 @@
 
 ---
 
+### Этап 12. Интерактивные Задания и Лабораторные в Кабинете Студента (`/cabinet -> Задания`) 📝 🧪 ⭐
+
+#### 🎯 Цель:
+Превратить статичный список заданий в Личном кабинете студента в полноценную интерактивную систему выполнения, сдачи и менторской оценки практических работ с привязкой к REST API бэкенда и геймификацией (начислением бонусного XP).
+
+#### 🧠 Архитектурные решения:
+1. **Типизация данных (`entities/course`)**:
+   - Расширен интерфейс `AssignmentItem`: тип работы (`lab`, `project`, `quiz`), критерии (`requirements`), прикрепленное решение (`submission`: `repoUrl`, `code`, `notes`), награда `xpReward` (+150..200 XP) и рецензия ментора (`mentorFeedback`: `comment`, `reviewerName`, `reviewedAt`).
+2. **Серверный слой (`projects/Back/src/modules/assignments`)**:
+   - `GET /api/assignments`: выдача списка заданий пользователя.
+   - `POST /api/assignments/:id/submit`: фиксация сданного решения (перевод в статус `review`).
+   - `PATCH /api/assignments/:id/grade`: оценка работы ментором (статус `passed`/`rejected`, выставление баллов и комментария) с автоматическим начислением бонусного опыта ученику прямо в **Supabase**!
+3. **Клиентский слой (`CourseApiService`)**:
+   - Полноценная интеграция с сервером на порту 5000 и отказоустойчивым кэшированием в `localStorage` (`lern_user_assignments_v1`).
+4. **Виджет `CabinetAssignmentsTab`**:
+   - Фильтры статусов: «Все», «К сдаче ✏️», «На проверке ⏳», «Принято ✓», «Доработка ✕».
+   - Поиск по дисциплине и названию задания в реальном времени.
+   - Карточки с бейджами типа работы, наградами XP, ссылками на репозиторий и блоком обратной связи ментора.
+   - Модальное окно **сдачи работы**: ввод ссылки на Git (GitHub/GitLab) или прямого кода решения + примечания для преподавателя.
+   - Модальное окно **оценки ментором**: мгновенная симуляция проверки (выставление баллов и комментария) с начислением опыта в реальном времени!
+
+#### 📁 Затронутые и созданные файлы:
+- `projects/Back/src/modules/assignments/assignments.service.ts`
+- `projects/Back/src/modules/assignments/assignments.controller.ts`
+- `projects/Back/src/index.ts` — регистрация маршрута `/api/assignments`.
+- `src/entities/course/types/index.ts` — расширенная модель практических работ.
+- `src/entities/course/api/course-api.ts` — методы `getAssignments`, `submitAssignment`, `gradeAssignment`.
+- `src/widgets/cabinet-dashboard/ui/cabinet-assignments-tab.vue` — интерактивная вкладка заданий.
+- `src/widgets/cabinet-dashboard/ui/cabinet-dashboard.vue` — двусторонняя синхронизация `@update:assignments`.
+- `docs/tasks.md` & `docs/worklog.md` — актуализация документации.
+
+---
+
 ## 🔮 Следующие шаги:
-1. **Интерактивные задания в кабинете (`/cabinet`)** (сдача кода / ссылки на репозиторий, статус проверки).
-2. **Экспорт / Импорт курсов в JSON** (локальный перенос и бэкапы).
-3. **Расширение UI-кита графиками активности (`UiChart` / `UiActivityCalendar`)**.
+1. **Экспорт / Импорт курсов в JSON** (локальный перенос и бэкапы в Студии автора).
+2. **Расширение UI-кита графиками активности (`UiChart` / `UiActivityCalendar`)**.
+3. **Звуковые микроэффекты (Web Audio API)** в тренажёре памяти Active Recall.

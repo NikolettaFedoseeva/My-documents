@@ -6,6 +6,7 @@ import { authRouter } from './modules/auth/auth.controller'
 import { usersRouter } from './modules/users/users.controller'
 import { coursesRouter } from './modules/courses/courses.controller'
 import { progressRouter } from './modules/progress/progress.controller'
+import { assignmentsRouter } from './modules/assignments/assignments.controller'
 
 dotenv.config()
 
@@ -45,6 +46,7 @@ app.use('/api/auth', authRouter)
 app.use('/api/users', usersRouter)
 app.use('/api/courses', coursesRouter)
 app.use('/api/progress', progressRouter)
+app.use('/api/assignments', assignmentsRouter)
 
 app.listen(PORT, () => {
   console.log(`🚀 Lern Backend API Server running at http://localhost:${PORT}`)

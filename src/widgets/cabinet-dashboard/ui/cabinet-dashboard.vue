@@ -99,6 +99,7 @@ const onContinueCourse = (courseId: string): void => {
         <CabinetAssignmentsTab
           v-else-if="activeTab === 'assignments'"
           :assignments="assignments"
+          @update:assignments="assignments = $event"
         />
 
         <CabinetAchievementsTab
