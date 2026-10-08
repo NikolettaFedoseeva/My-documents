@@ -24,6 +24,8 @@ import {
   UiTag,
   UiTagsBar,
   InteractiveFlashcard,
+  UiActivityCalendar,
+  UiXpChart,
 } from "lern-ui-kit";
 
 import type {
@@ -32,6 +34,8 @@ import type {
   QuestionOption,
   DropdownOption,
   TableColumn,
+  ActivityDay,
+  XpDataPoint,
 } from "lern-ui-kit";
 
 // #region Theme Management
@@ -164,6 +168,40 @@ const onResetQuiz = () => {
   isQuizSubmitted.value = false;
 };
 // #endregion Active Recall & Quiz Demo
+
+// #region Activity & XP Chart Demo Data
+const generateDemoCalendarDays = (): ActivityDay[] => {
+  const result: ActivityDay[] = [];
+  const today = new Date();
+  for (let i = 180; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    const dateStr = d.toISOString().split("T")[0];
+    const pseudo = (d.getFullYear() * 19 + d.getMonth() * 11 + d.getDate() * 17) % 10;
+    const count = i < 14 ? ((d.getDate() * 2) % 8) + 2 : (pseudo > 4 ? (pseudo % 7) + 1 : 0);
+    result.push({
+      date: dateStr,
+      count,
+      xp: count * 20,
+      details: count > 0 ? ['Изучена глава кодекса', '3D-флешкарты повторены'] : undefined,
+    });
+  }
+  return result;
+};
+
+const demoActivityCalendarDays = ref<ActivityDay[]>(generateDemoCalendarDays());
+
+const demoXpPoints = ref<XpDataPoint[]>([
+  { date: '01.10', label: 'Пн', xp: 60, meta: 'Изучена глава 01.1' },
+  { date: '02.10', label: 'Вт', xp: 120, meta: '2 теста + флешкарты' },
+  { date: '03.10', label: 'Ср', xp: 85, meta: 'Самопроверка' },
+  { date: '04.10', label: 'Чт', xp: 190, meta: 'Сдана лабораторная работа' },
+  { date: '05.10', label: 'Пт', xp: 140, meta: 'Закрепление материала' },
+  { date: '06.10', label: 'Сб', xp: 95, meta: 'Active Recall тренажёр' },
+  { date: '07.10', label: 'Вс', xp: 110, meta: 'Повторение сложных тем' },
+  { date: '08.10', label: 'Сегодня', xp: 260, meta: '🚀 Ударный день (+проект)' },
+]);
+// #endregion Activity & XP Chart Demo Data
 </script>
 
 <template>
@@ -732,6 +770,62 @@ const onResetQuiz = () => {
                     variant="primary"
                   />
                 </div>
+              </div>
+            </div>
+
+            <!-- 6. Графики Активности и Опыта (UiActivityCalendar & UiXpChart) -->
+            <div class="ui-kit-group" style="grid-column: 1 / -1;">
+              <h3>Календарь Стриков Активности GitHub-Style (UiActivityCalendar)</h3>
+              <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                <UiActivityCalendar
+                  :days="demoActivityCalendarDays"
+                  title="Учебная активность студента"
+                  subtitle="Непрерывные стрики и ежедневная практика в кодексе"
+                  color-scheme="green"
+                  :current-streak="14"
+                  :longest-streak="42"
+                />
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1rem;">
+                  <UiActivityCalendar
+                    :days="demoActivityCalendarDays"
+                    title="Цветовая схема Indigo"
+                    subtitle="Палитра LERN Pro"
+                    color-scheme="indigo"
+                    :show-stats="false"
+                    :weeks-count="16"
+                  />
+                  <UiActivityCalendar
+                    :days="demoActivityCalendarDays"
+                    title="Цветовая схема Amber"
+                    subtitle="Палитра Золотого Стрика"
+                    color-scheme="amber"
+                    :show-stats="false"
+                    :weeks-count="16"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="ui-kit-group" style="grid-column: 1 / -1;">
+              <h3>Интерактивный График Опыта (UiXpChart)</h3>
+              <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                <UiXpChart
+                  :data="demoXpPoints"
+                  title="Динамика набора опыта (XP)"
+                  subtitle="Плавная кривая Безье с градиентной заливкой, тултипом и метриками"
+                  color="indigo"
+                  chart-type="area"
+                />
+
+                <UiXpChart
+                  :data="demoXpPoints"
+                  title="Столбчатый режим (Bar Chart)"
+                  subtitle="Аналитика заработанного опыта по дням"
+                  color="emerald"
+                  chart-type="bar"
+                  :show-type-toggle="false"
+                />
               </div>
             </div>
           </div>
