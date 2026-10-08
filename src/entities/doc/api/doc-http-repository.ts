@@ -11,8 +11,9 @@ import type {
 } from '../types'
 import type { DocRepository } from './doc-repository.interface'
 import { DocLocalRepository } from './doc-local-repository'
+import { API_BASE_URL, getAuthHeaders } from '@/shared/api'
 
-const API_BASE_URL = 'http://localhost:5000/api/courses'
+const COURSES_API_URL = `${API_BASE_URL}/courses`
 
 /**
  * Реализация DocRepository через REST API бэкенда (Node.js + Express + Prisma / SQLite)
@@ -21,19 +22,15 @@ const API_BASE_URL = 'http://localhost:5000/api/courses'
 export class DocHttpRepository implements DocRepository {
   private fallbackRepo: DocLocalRepository = new DocLocalRepository()
 
-  private getAuthHeaders(): HeadersInit {
-    const token = localStorage.getItem('lern_token')
-    return {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    }
+  private getHeaders(): HeadersInit {
+    return getAuthHeaders()
   }
 
   // #region Методы работы с курсами
   async getCourses(): Promise<CourseCodex[]> {
     try {
-      const response = await fetch(`${API_BASE_URL}`, {
-        headers: this.getAuthHeaders(),
+      const response = await fetch(`${COURSES_API_URL}`, {
+        headers: this.getHeaders(),
       })
       if (response.ok) {
         const data = await response.json()
@@ -47,8 +44,8 @@ export class DocHttpRepository implements DocRepository {
 
   async getCourseById(id: string): Promise<CourseCodex | null> {
     try {
-      const response = await fetch(`${API_BASE_URL}/${id}`, {
-        headers: this.getAuthHeaders(),
+      const response = await fetch(`${COURSES_API_URL}/${id}`, {
+        headers: this.getHeaders(),
       })
       if (response.ok) {
         return (await response.json()) as CourseCodex
@@ -61,8 +58,8 @@ export class DocHttpRepository implements DocRepository {
 
   async getCourseBySlug(slug: string): Promise<CourseCodex | null> {
     try {
-      const response = await fetch(`${API_BASE_URL}/${slug}`, {
-        headers: this.getAuthHeaders(),
+      const response = await fetch(`${COURSES_API_URL}/${slug}`, {
+        headers: this.getHeaders(),
       })
       if (response.ok) {
         return (await response.json()) as CourseCodex
@@ -75,9 +72,9 @@ export class DocHttpRepository implements DocRepository {
 
   async createCourse(dto: CreateCourseDto): Promise<CourseCodex> {
     try {
-      const response = await fetch(`${API_BASE_URL}`, {
+      const response = await fetch(`${COURSES_API_URL}`, {
         method: 'POST',
-        headers: this.getAuthHeaders(),
+        headers: this.getHeaders(),
         body: JSON.stringify(dto),
       })
       if (response.ok) {
@@ -92,9 +89,9 @@ export class DocHttpRepository implements DocRepository {
 
   async updateCourse(id: string, dto: UpdateCourseDto): Promise<CourseCodex> {
     try {
-      const response = await fetch(`${API_BASE_URL}/${id}`, {
+      const response = await fetch(`${COURSES_API_URL}/${id}`, {
         method: 'PUT',
-        headers: this.getAuthHeaders(),
+        headers: this.getHeaders(),
         body: JSON.stringify(dto),
       })
       if (response.ok) {
@@ -109,9 +106,9 @@ export class DocHttpRepository implements DocRepository {
 
   async deleteCourse(id: string): Promise<void> {
     try {
-      const response = await fetch(`${API_BASE_URL}/${id}`, {
+      const response = await fetch(`${COURSES_API_URL}/${id}`, {
         method: 'DELETE',
-        headers: this.getAuthHeaders(),
+        headers: this.getHeaders(),
       })
       if (response.ok) return
     } catch (e) {
@@ -122,9 +119,9 @@ export class DocHttpRepository implements DocRepository {
 
   async importCourse(course: CourseCodex, options: { overwrite?: boolean } = {}): Promise<CourseCodex> {
     try {
-      const response = await fetch(`${API_BASE_URL}/import`, {
+      const response = await fetch(`${COURSES_API_URL}/import`, {
         method: 'POST',
-        headers: this.getAuthHeaders(),
+        headers: this.getHeaders(),
         body: JSON.stringify({ course, overwrite: options?.overwrite }),
       })
       if (response.ok) {
@@ -145,9 +142,9 @@ export class DocHttpRepository implements DocRepository {
   // #region Методы работы с модулями и главами
   async getCategories(courseId?: string): Promise<DocCategory[]> {
     try {
-      const url = courseId ? `${API_BASE_URL}/categories?courseId=${courseId}` : `${API_BASE_URL}/categories`
+      const url = courseId ? `${COURSES_API_URL}/categories?courseId=${courseId}` : `${COURSES_API_URL}/categories`
       const response = await fetch(url, {
-        headers: this.getAuthHeaders(),
+        headers: this.getHeaders(),
       })
       if (response.ok) {
         return (await response.json()) as DocCategory[]
@@ -160,8 +157,8 @@ export class DocHttpRepository implements DocRepository {
 
   async getDocById(id: string, courseId?: string): Promise<DocItem | null> {
     try {
-      const response = await fetch(`${API_BASE_URL}/docs/${id}`, {
-        headers: this.getAuthHeaders(),
+      const response = await fetch(`${COURSES_API_URL}/docs/${id}`, {
+        headers: this.getHeaders(),
       })
       if (response.ok) {
         return (await response.json()) as DocItem
@@ -174,9 +171,9 @@ export class DocHttpRepository implements DocRepository {
 
   async createCategory(dto: CreateCategoryDto, courseId?: string): Promise<DocCategory> {
     try {
-      const response = await fetch(`${API_BASE_URL}/categories`, {
+      const response = await fetch(`${COURSES_API_URL}/categories`, {
         method: 'POST',
-        headers: this.getAuthHeaders(),
+        headers: this.getHeaders(),
         body: JSON.stringify({ ...dto, courseId }),
       })
       if (response.ok) {
@@ -191,9 +188,9 @@ export class DocHttpRepository implements DocRepository {
 
   async updateCategory(id: string, dto: UpdateCategoryDto, courseId?: string): Promise<DocCategory> {
     try {
-      const response = await fetch(`${API_BASE_URL}/categories/${id}`, {
+      const response = await fetch(`${COURSES_API_URL}/categories/${id}`, {
         method: 'PUT',
-        headers: this.getAuthHeaders(),
+        headers: this.getHeaders(),
         body: JSON.stringify(dto),
       })
       if (response.ok) {
@@ -208,9 +205,9 @@ export class DocHttpRepository implements DocRepository {
 
   async deleteCategory(id: string, courseId?: string): Promise<void> {
     try {
-      const response = await fetch(`${API_BASE_URL}/categories/${id}`, {
+      const response = await fetch(`${COURSES_API_URL}/categories/${id}`, {
         method: 'DELETE',
-        headers: this.getAuthHeaders(),
+        headers: this.getHeaders(),
       })
       if (response.ok) return
     } catch (e) {
@@ -221,9 +218,9 @@ export class DocHttpRepository implements DocRepository {
 
   async createDoc(dto: CreateDocDto, courseId?: string): Promise<DocItem> {
     try {
-      const response = await fetch(`${API_BASE_URL}/docs`, {
+      const response = await fetch(`${COURSES_API_URL}/docs`, {
         method: 'POST',
-        headers: this.getAuthHeaders(),
+        headers: this.getHeaders(),
         body: JSON.stringify(dto),
       })
       if (response.ok) {
@@ -238,9 +235,9 @@ export class DocHttpRepository implements DocRepository {
 
   async updateDoc(id: string, dto: UpdateDocDto, courseId?: string): Promise<DocItem> {
     try {
-      const response = await fetch(`${API_BASE_URL}/docs/${id}`, {
+      const response = await fetch(`${COURSES_API_URL}/docs/${id}`, {
         method: 'PUT',
-        headers: this.getAuthHeaders(),
+        headers: this.getHeaders(),
         body: JSON.stringify(dto),
       })
       if (response.ok) {
@@ -255,9 +252,9 @@ export class DocHttpRepository implements DocRepository {
 
   async deleteDoc(id: string, courseId?: string): Promise<void> {
     try {
-      const response = await fetch(`${API_BASE_URL}/docs/${id}`, {
+      const response = await fetch(`${COURSES_API_URL}/docs/${id}`, {
         method: 'DELETE',
-        headers: this.getAuthHeaders(),
+        headers: this.getHeaders(),
       })
       if (response.ok) return
     } catch (e) {

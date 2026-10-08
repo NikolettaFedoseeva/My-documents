@@ -1,11 +1,15 @@
 <script setup lang="ts">
 import { AppHeader } from '@/widgets/app-header'
+import { CommandPaletteModal } from '@/features/command-palette'
 </script>
 
 <template>
   <div id="shell-layout">
     <!-- Сквозной FSD Хедер платформы LERN -->
     <AppHeader />
+
+    <!-- Глобальная палитра команд и поиск (Ctrl+K) -->
+    <CommandPaletteModal />
 
     <!-- Main Viewport -->
     <main class="shell-content">

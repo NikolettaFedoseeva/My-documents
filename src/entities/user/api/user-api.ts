@@ -104,15 +104,13 @@ const INITIAL_USERS: User[] = [
   },
 ]
 
-const API_BASE_URL = 'http://localhost:5000/api/users'
+import { API_BASE_URL, getAuthHeaders } from '@/shared/api'
+
+const USERS_API_URL = `${API_BASE_URL}/users`
 
 export class UserApiService {
-  private static getAuthHeaders(): HeadersInit {
-    const token = localStorage.getItem('lern_token')
-    return {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    }
+  private static getHeaders(): HeadersInit {
+    return getAuthHeaders()
   }
 
   /**
@@ -122,8 +120,8 @@ export class UserApiService {
     try {
       const token = localStorage.getItem('lern_token')
       if (token) {
-        const response = await fetch('http://localhost:5000/api/auth/me', {
-          headers: this.getAuthHeaders(),
+        const response = await fetch(`${API_BASE_URL}/auth/me`, {
+          headers: this.getHeaders(),
         })
         if (response.ok) {
           const data = await response.json()
@@ -146,17 +144,18 @@ export class UserApiService {
    */
   static async getAllUsers(): Promise<User[]> {
     try {
-      const response = await fetch(API_BASE_URL, {
-        headers: this.getAuthHeaders(),
+      const response = await fetch(USERS_API_URL, {
+        headers: this.getHeaders(),
       })
       if (response.ok) {
         const users = await response.json()
-        if (Array.isArray(users)) {
+        if (Array.isArray(users) && users.length > 0) {
+          localStorage.setItem(STORAGE_KEY_ADMIN_USERS, JSON.stringify(users))
           return users
         }
       }
     } catch (e) {
-      // Fallback
+      // Fallback при отсутствии связи с бэкендом
     }
 
     return new Promise((resolve) => {
@@ -183,14 +182,21 @@ export class UserApiService {
    */
   static async updateUserRole(userId: string, newRole: import('../types').UserRole): Promise<User> {
     try {
-      const response = await fetch(`${API_BASE_URL}/${userId}/role`, {
+      const response = await fetch(`${USERS_API_URL}/${userId}/role`, {
         method: 'PATCH',
-        headers: this.getAuthHeaders(),
+        headers: this.getHeaders(),
         body: JSON.stringify({ role: newRole }),
       })
       if (response.ok) {
         const data = await response.json()
-        if (data.user) return data.user
+        if (data.user) {
+          // Обновляем локальный кэш
+          const users = await this.getAllUsers()
+          const target = users.find((u) => u.id === userId)
+          if (target) target.role = newRole
+          localStorage.setItem(STORAGE_KEY_ADMIN_USERS, JSON.stringify(users))
+          return data.user
+        }
       }
     } catch (e) {
       // Fallback
@@ -215,14 +221,18 @@ export class UserApiService {
     const newBanState = !target?.isBanned
 
     try {
-      const response = await fetch(`${API_BASE_URL}/${userId}/ban`, {
+      const response = await fetch(`${USERS_API_URL}/${userId}/ban`, {
         method: 'PATCH',
-        headers: this.getAuthHeaders(),
+        headers: this.getHeaders(),
         body: JSON.stringify({ isBanned: newBanState }),
       })
       if (response.ok) {
         const data = await response.json()
-        if (data.user) return data.user
+        if (data.user) {
+          if (target) target.isBanned = newBanState
+          localStorage.setItem(STORAGE_KEY_ADMIN_USERS, JSON.stringify(users))
+          return data.user
+        }
       }
     } catch (e) {
       // Fallback

@@ -6,7 +6,9 @@ import CabinetCoursesTab from './cabinet-courses-tab.vue'
 import CabinetAssignmentsTab from './cabinet-assignments-tab.vue'
 import CabinetAchievementsTab from './cabinet-achievements-tab.vue'
 import CabinetActivityTab from './cabinet-activity-tab.vue'
+import CabinetNotesTab from './cabinet-notes-tab.vue'
 import CabinetSettingsTab from './cabinet-settings-tab.vue'
+import { useDocNotesStore } from '@/entities/doc'
 
 // #region defineEmits
 const emit = defineEmits<{
@@ -15,6 +17,7 @@ const emit = defineEmits<{
 // #endregion defineEmits
 
 const router = useRouter()
+const notesStore = useDocNotesStore()
 
 // #region composable
 const {
@@ -91,6 +94,15 @@ const onContinueCourse = (courseId: string): void => {
         <button
           type="button"
           class="cabinet-dashboard__tab-btn"
+          :class="{ 'cabinet-dashboard__tab-btn--active': activeTab === 'notes' }"
+          @click="setTab('notes')"
+        >
+          <span>🔖 Закладки & Заметки ({{ notesStore.totalBookmarksCount + notesStore.totalNotesCount }})</span>
+        </button>
+
+        <button
+          type="button"
+          class="cabinet-dashboard__tab-btn"
           :class="{ 'cabinet-dashboard__tab-btn--active': activeTab === 'settings' }"
           @click="setTab('settings')"
         >
@@ -121,6 +133,10 @@ const onContinueCourse = (courseId: string): void => {
           v-else-if="activeTab === 'activity'"
           :current-streak="stats?.streakDays || 12"
           :total-xp="user?.xp || 1250"
+        />
+
+        <CabinetNotesTab
+          v-else-if="activeTab === 'notes'"
         />
 
         <CabinetSettingsTab

@@ -127,5 +127,25 @@ export interface CourseCodex {
   updatedAt: string
 }
 
+export interface DocBookmark {
+  id: string
+  docId: string
+  docTitle: string
+  courseSlug: string
+  courseTitle: string
+  chapterCode?: string
+  createdAt: string
+}
+
+export interface DocMarginNote {
+  id: string
+  docId: string
+  sectionIndex?: number
+  selectedText?: string
+  noteText: string
+  color: 'amber' | 'cyan' | 'emerald' | 'purple'
+  createdAt: string
+}
+
 export * from './dto'
 

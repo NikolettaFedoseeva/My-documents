@@ -114,16 +114,13 @@ const MOCK_STATS: UserCabinetStats = {
   averageScore: 96,
 }
 
+import { API_BASE_URL, getAuthHeaders } from '@/shared/api'
+
 const STORAGE_KEY_ASSIGNMENTS = 'lern_user_assignments_v1'
-const API_BASE_URL = 'http://localhost:5000/api'
 
 export class CourseApiService {
-  private static getAuthHeaders(): HeadersInit {
-    const token = localStorage.getItem('lern_token')
-    return {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    }
+  private static getHeaders(): HeadersInit {
+    return getAuthHeaders()
   }
 
   /**
@@ -143,7 +140,7 @@ export class CourseApiService {
   static async getAssignments(): Promise<AssignmentItem[]> {
     try {
       const response = await fetch(`${API_BASE_URL}/assignments`, {
-        headers: this.getAuthHeaders(),
+        headers: this.getHeaders(),
       })
       if (response.ok) {
         const data = await response.json()
@@ -265,7 +262,7 @@ export class CourseApiService {
     try {
       const response = await fetch(`${API_BASE_URL}/assignments/${id}/submit`, {
         method: 'POST',
-        headers: this.getAuthHeaders(),
+        headers: this.getHeaders(),
         body: JSON.stringify(payload),
       })
       if (response.ok) {
@@ -307,7 +304,7 @@ export class CourseApiService {
     try {
       const response = await fetch(`${API_BASE_URL}/assignments/${id}/grade`, {
         method: 'PATCH',
-        headers: this.getAuthHeaders(),
+        headers: this.getHeaders(),
         body: JSON.stringify(payload),
       })
       if (response.ok) {

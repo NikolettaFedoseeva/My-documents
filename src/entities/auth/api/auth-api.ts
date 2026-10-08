@@ -1,7 +1,8 @@
 import { LoginPayload, RegisterPayload, ResetPasswordPayload, AuthResponse } from '../types'
 import { UserApiService, UserRole, User } from '@/entities/user'
+import { API_BASE_URL } from '@/shared/api'
 
-const API_BASE_URL = 'http://localhost:5000/api/auth'
+const AUTH_API_URL = `${API_BASE_URL}/auth`
 
 export class AuthApiService {
   /**
@@ -9,7 +10,7 @@ export class AuthApiService {
    */
   static async login(payload: LoginPayload): Promise<AuthResponse> {
     try {
-      const response = await fetch(`${API_BASE_URL}/login`, {
+      const response = await fetch(`${AUTH_API_URL}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -89,7 +90,7 @@ export class AuthApiService {
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/register`, {
+      const response = await fetch(`${AUTH_API_URL}/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

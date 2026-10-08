@@ -6,6 +6,29 @@
 
 ## 📅 Хронология работ
 
+### [2026-10-08] — Этап 16: Комплексная интеграция фронтенда с REST API бэкенда и облаком Supabase
+
+#### 🎯 Цель:
+Связать все клиентские подсистемы платформы (аутентификацию, профили пользователей, администрирование ролей, базу знаний курсов, задания/лабораторные и прогресс изучения с XP) с реальным REST API Node.js Express сервером на порту 5000 и облачной СУБД Supabase PostgreSQL, обеспечив полную сохранность данных и бесшовный офлайн-fallback.
+
+#### 🧠 Архитектурные решения (FSD):
+1. **Слой `shared/api`**:
+   - `config.ts`: Вынесена единая точка конфигурации `API_BASE_URL` (`process.env.VUE_APP_API_URL || 'http://localhost:5000/api'`).
+   - Функция генерации авторизационных заголовков `getAuthHeaders()` с подстановкой JWT-токена `lern_token`.
+   - Отказоустойчивая утилита `apiFetch` с поддержкой таймаутов через `AbortController`.
+   - Barrel-экспорт через `shared/api/index.ts`.
+2. **Слой `entities/auth` & `entities/user`**:
+   - `AuthApiService`: вызовы `login` и `register` переведены на централизованный эндпоинт `/api/auth` с сохранением JWT-токена в `localStorage`.
+   - `UserApiService`: получение списка пользователей через `GET /api/users`, изменение ролей через `PATCH /api/users/:id/role` и блокировка через `PATCH /api/users/:id/ban` с авто-обновлением локального кэша для панели администратора.
+3. **Слой `entities/doc`**:
+   - `DocHttpRepository`: все запросы к курсам, категориям и статьям направляются на единый базовый эндпоинт `/api/courses` с автоматическим fallback на `DocLocalRepository`.
+   - `DocProgressApiService`: специализированный сервис облачной синхронизации прогресса с `/api/progress` (`fetchMyProgress`, `syncToggleChapter`, `syncBonusXp`, `syncMasterFlashcard`).
+   - `useDocProgressStore`: при гидрации стора выполняется фоновая подгрузка прогресса из Supabase (`/api/progress/me`), а при отметке прочитанного, решении тестов, освоении 3D-флешкарт и начислении комбо-XP запускается оптимистичная фоновая синхронизация с облаком.
+4. **Слой `entities/course`**:
+   - `CourseApiService`: сдача решений лабораторных работ и практических заданий привязана к `POST /api/assignments/:id/submit`, а менторская оценка — к `PATCH /api/assignments/:id/grade`.
+
+---
+
 ### [2026-10-08] — Этап 15: Web Audio звуковые микроэффекты в 3D-тренажёре Active Recall
 
 #### 🎯 Цель:
@@ -568,8 +591,66 @@
 
 ---
 
+### [2026-10-08] — Этап 17: Командная палитра (Ctrl+K), Заметки на полях, Динамические ачивки и расширение UI Kit 🚀 🔍 🔖 ⭐
+
+#### 🎯 Цель:
+Реализовать комплексный пакет улучшений пользовательского опыта и академического окружения платформы LERN:
+1. Глобальная Командная палитра быстрого поиска и навигации (Spotlight / `Ctrl + K`).
+2. Пергаментные закладки и цветные заметки на полях книги с управлением из Личного кабинета.
+3. Система динамических наград и достижений студента с привязкой к реальным показателям обучения.
+4. Расширение Shared UI Kit компонентами `UiBanner`, `UiPopover` и `UiDateInput`.
+
+#### 🧠 Архитектурные решения (FSD & Vue 3 Composition API):
+1. **Командная палитра (`src/features/command-palette`)**:
+   - `useCommandPalette`: композибл с регистрацией глобального слушателя `keydown` (`Ctrl+K`, `Cmd+K`, `Escape`), управлением состоянием открытия, индексом активного элемента и списком команд.
+   - Поиск по всем доступным курсам (`DocApiService.getCourses()`), главам и системным разделам (Главная, Курсы, Студия автора, Личный кабинет, Админка, UI Kit).
+   - Клавиатурная навигация `↑` / `↓` и мгновенный переход по `Enter`.
+   - Интеграция в корень приложения `src/app/App.vue` и кнопка быстрого вызова со значком `Ctrl K` в шапке `AppHeader`.
+2. **Заметки на полях и закладки (`entities/doc` & `docs-viewer` & `cabinet`)**:
+   - `DocBookmark` и `DocMarginNote` — строгие интерфейсы в `entities/doc/types`.
+   - `useDocNotesStore` — реактивный стор на Pinia с персистентностью в `localStorage` (`lern_doc_bookmarks_v1`, `lern_doc_margin_notes_v1`).
+   - В `docs-content-viewer.vue`:
+     - Кнопка закладки страницы в шапке пергамента (`btn-bookmark`) с изменением состояния в реальном времени.
+     - Интерактивный блок заметок на полях статьи с выбором цветных маркеров (`amber`, `cyan`, `emerald`, `purple`), формой ввода и удалением.
+   - В `cabinet-dashboard.vue`:
+     - Вкладка `CabinetNotesTab` («🔖 Закладки & Заметки») со списками сохраненных глав, быстрыми ссылками для перехода в читалку и карточками заметок на полях.
+3. **Система динамических достижений (`CabinetAchievementsTab`)**:
+   - Привязка наград к реальному прогрессу из сторов `useDocProgressStore` и `useDocNotesStore`:
+     - *«Первый Шаг 👣»* — завершение первой главы.
+     - *«Память Чемпиона 🧠»* — 5+ освоенных флешкарт Active Recall.
+     - *«Магистр Тестов 🎯»* — успешная сдача 3+ квизов.
+     - *«Огненный Стрик 🔥»* — серия активности 3+ дней подряд.
+     - *«Охотник за Опытом 💎»* — набор 500+ XP.
+     - *«Академический Чтец 🔖»* — добавление закладок или заметок на полях.
+   - Сводный трек общего прогресса (процент разблокировки), фильтры по статусам («Все», «Полученные ⭐», «В процессе 🔒») и персональные индикаторы прогресса.
+4. **Shared UI Kit (`src/shared/ui`)**:
+   - `UiBanner`: градиентные и статусные баннеры (`gradient`, `info`, `success`, `warning`) с кнопками действий и закрытием.
+   - `UiPopover`: компонент всплывающего меню/тултипа с автоматическим отслеживанием клика вне элемента (`click-outside`).
+   - `UiDateInput`: кастомное поле ввода даты со стилизацией под дизайн-систему, поддержкой `min`/`max` и валидацией.
+   - Публичные экспорты в `src/shared/ui/index.ts` и `src/shared/index.ts`.
+   - Интерактивные примеры добавлены в витрину `UiKitPage`.
+
+#### 📁 Затронутые и созданные файлы:
+- `src/features/command-palette/*` — типы, стор, модальное окно палитры и barrel-экспорт.
+- `src/entities/doc/types/index.ts` — интерфейсы `DocBookmark` и `DocMarginNote`.
+- `src/entities/doc/model/doc-notes-store.ts` — стор заметок и закладок.
+- `src/entities/doc/model/index.ts` & `src/entities/doc/index.ts` — barrel-экспорты.
+- `src/widgets/docs-viewer/ui/docs-content-viewer.vue` — кнопка закладки и блок заметок на полях.
+- `src/widgets/docs-viewer/ui/docs-viewer.vue` — проброс контекста активного курса.
+- `src/widgets/cabinet-dashboard/ui/cabinet-notes-tab.vue` — вкладка закладок и заметок в ЛК.
+- `src/widgets/cabinet-dashboard/ui/cabinet-achievements-tab.vue` — динамические ачивки на базе реального прогресса.
+- `src/widgets/cabinet-dashboard/ui/cabinet-dashboard.vue` & `use-cabinet-dashboard.ts` — регистрация вкладки.
+- `src/shared/ui/banner/*`, `popover/*`, `date-input/*` — новые shared-компоненты.
+- `src/shared/ui/index.ts` & `src/shared/index.ts` — публичные экспорты shared UI.
+- `src/pages/ui-kit/ui/ui-kit-page.vue` — витрина новых компонентов UI.
+- `src/app/App.vue` & `src/widgets/app-header/ui/app-header.vue` — вызов командной палитры `Ctrl + K`.
+- `docs/tasks.md` & `docs/worklog.md` — актуализация документации.
+
+---
+
 ## 🔮 Следующие шаги:
-1. **Звуковые микроэффекты (Web Audio API)** в тренажёре памяти Active Recall.
-2. **Экспорт аналитического PDF-сертификата о прохождении курса**.
+1. **Экспорт аналитического PDF-сертификата о прохождении курса**.
+2. **Финальная полировка и релиз версии 1.0.0**.
+
 
 

@@ -27,6 +27,7 @@ import {
   UiActivityCalendar,
   UiXpChart,
 } from "lern-ui-kit";
+import { UiBanner, UiPopover, UiDateInput } from "@/shared";
 
 import type {
   TabItem,
@@ -74,6 +75,7 @@ const demoCheckbox2 = ref<boolean>(false);
 const demoCheckbox3 = ref<boolean>(true);
 const demoTextarea = ref<string>("Архитектура FSD разделяет приложение на слои: app, pages, widgets, features, entities, shared.");
 const demoTags = ref<string[]>(["vue3", "typescript", "fsd", "pinia", "active-recall"]);
+const demoDate = ref<string>("2026-10-08");
 
 // Table Demo
 const tableColumns: TableColumn[] = [
@@ -773,7 +775,65 @@ const demoXpPoints = ref<XpDataPoint[]>([
               </div>
             </div>
 
-            <!-- 6. Графики Активности и Опыта (UiActivityCalendar & UiXpChart) -->
+            <!-- 6. Информационные Баннеры (UiBanner) -->
+            <div class="ui-kit-group" style="grid-column: 1 / -1;">
+              <h3>Информационные Баннеры (UiBanner)</h3>
+              <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <UiBanner
+                  title="Флагманский модуль Active Recall запущен!"
+                  description="Изучайте материал с интервальным повторением и звуковыми микроэффектами Web Audio."
+                  variant="gradient"
+                  icon="🚀"
+                  action-text="Попробовать тренажёр"
+                />
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1rem;">
+                  <UiBanner
+                    title="Новое домашнее задание"
+                    description="Преподаватель прикрепил критерии лабораторной работы №3."
+                    variant="info"
+                    icon="📝"
+                    action-text="Сдать решение"
+                  />
+                  <UiBanner
+                    title="Ударный стрик 14 дней!"
+                    description="Вы занимаетесь каждый день без перерывов. Держите темп!"
+                    variant="success"
+                    icon="🔥"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- 7. Всплывающие Меню (UiPopover) и Выбор Даты (UiDateInput) -->
+            <div class="ui-kit-group">
+              <h3>Всплывающие Контекстные Меню (UiPopover)</h3>
+              <div class="ui-kit-row" style="gap: 1rem;">
+                <UiPopover trigger-text="⚡ Действия страницы" position="bottom">
+                  <div style="display: flex; flex-direction: column; gap: 0.4rem; min-width: 190px;">
+                    <button type="button" style="text-align: left; padding: 0.5rem 0.75rem; border-radius: 8px; background: rgba(255,255,255,0.06); border: none; color: #fff; cursor: pointer;">🔖 Сохранить в закладки</button>
+                    <button type="button" style="text-align: left; padding: 0.5rem 0.75rem; border-radius: 8px; background: rgba(255,255,255,0.06); border: none; color: #fff; cursor: pointer;">📥 Экспорт в JSON</button>
+                    <button type="button" style="text-align: left; padding: 0.5rem 0.75rem; border-radius: 8px; background: rgba(255,255,255,0.06); border: none; color: #fff; cursor: pointer;">🔗 Скопировать ссылку</button>
+                  </div>
+                </UiPopover>
+              </div>
+            </div>
+
+            <div class="ui-kit-group">
+              <h3>Поле Выбора Даты (UiDateInput)</h3>
+              <div class="ui-kit-grid">
+                <UiDateInput
+                  v-model="demoDate"
+                  label="Дедлайн сдачи лабораторной"
+                />
+                <UiDateInput
+                  label="Отключенное поле (Disabled)"
+                  disabled
+                  model-value="2026-12-31"
+                />
+              </div>
+            </div>
+
+            <!-- 8. Графики Активности и Опыта (UiActivityCalendar & UiXpChart) -->
             <div class="ui-kit-group" style="grid-column: 1 / -1;">
               <h3>Календарь Стриков Активности GitHub-Style (UiActivityCalendar)</h3>
               <div style="display: flex; flex-direction: column; gap: 1.5rem;">

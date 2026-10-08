@@ -120,6 +120,7 @@ const {
       <div class="docs-workspace__content-col">
         <DocsContentViewer
           :doc="activeDoc"
+          :course="activeCourse"
           :prev-doc="prevDoc"
           :next-doc="nextDoc"
           :show-inline-study-deck="true"

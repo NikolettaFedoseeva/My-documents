@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { DocChapterProgress, DocProgressStorageData, DocStatus } from '../types'
+import { DocProgressApiService } from '../api/doc-progress-api'
 
 const STORAGE_KEY = 'lern_doc_progress_v1'
 const STORAGE_VERSION = 1
@@ -180,6 +181,50 @@ export const useDocProgressStore = defineStore('doc-progress', () => {
     } finally {
       isHydrated.value = true
       updateStreak()
+      syncWithBackend()
+    }
+  }
+
+  /**
+   * Фоновая синхронизация с облачным сервером Supabase через REST API бэкенда
+   */
+  const syncWithBackend = async (): Promise<void> => {
+    try {
+      const remote = await DocProgressApiService.fetchMyProgress()
+      if (!remote) return
+
+      let hasChanges = false
+      if (Array.isArray(remote.completedChapterIds)) {
+        for (const docId of remote.completedChapterIds) {
+          const ch = ensureChapter(docId)
+          if (ch.status !== 'completed' || !ch.isRead) {
+            ch.status = 'completed'
+            ch.isRead = true
+            hasChanges = true
+          }
+        }
+      }
+
+      if (Array.isArray(remote.flashcardsMasteredIds)) {
+        for (const fId of remote.flashcardsMasteredIds) {
+          const ch = ensureChapter(fId)
+          if (!ch.flashcardMastered) {
+            ch.flashcardMastered = true
+            hasChanges = true
+          }
+        }
+      }
+
+      if (typeof remote.xp === 'number' && remote.xp > totalXp.value) {
+        totalXp.value = remote.xp
+        hasChanges = true
+      }
+
+      if (hasChanges) {
+        persist()
+      }
+    } catch {
+      // Игнорируем сетевые ошибки при оффлайне
     }
   }
 
@@ -251,6 +296,7 @@ export const useDocProgressStore = defineStore('doc-progress', () => {
       if (!chapter.flashcardMastered) {
         chapter.flashcardMastered = true
         totalXp.value += 50
+        DocProgressApiService.syncMasterFlashcard(docId).catch(() => {})
       }
     } else {
       chapter.flashcardMastered = false
@@ -272,6 +318,7 @@ export const useDocProgressStore = defineStore('doc-progress', () => {
       if (!chapter.quizCompleted) {
         chapter.quizCompleted = true
         totalXp.value += 100
+        DocProgressApiService.syncBonusXp(100).catch(() => {})
       }
     } else {
       chapter.quizCompleted = false
@@ -297,6 +344,7 @@ export const useDocProgressStore = defineStore('doc-progress', () => {
       totalXp.value += 50
     }
 
+    DocProgressApiService.syncToggleChapter(docId).catch(() => {})
     persist()
   }
 
@@ -306,6 +354,7 @@ export const useDocProgressStore = defineStore('doc-progress', () => {
   const addBonusXp = (amount: number): void => {
     hydrate()
     totalXp.value += Math.max(0, amount)
+    DocProgressApiService.syncBonusXp(amount).catch(() => {})
     persist()
   }
 

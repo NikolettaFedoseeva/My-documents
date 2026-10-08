@@ -1,6 +1,7 @@
 export * from './types'
 export * from './model'
 export * from './api/doc-api'
+export * from './api/doc-progress-api'
 export * from './adapters/doc-adapter'
 export { default as DocBadge } from './ui/doc-badge/doc-badge.vue'
 export { default as DocCodeBlock } from './ui/doc-code-block/doc-code-block.vue'

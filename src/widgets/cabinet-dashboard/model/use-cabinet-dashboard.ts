@@ -3,7 +3,7 @@ import { Course, AssignmentItem, Achievement, UserCabinetStats, CourseApiService
 import { User, UserApiService } from '@/entities/user'
 import { useDocProgressStore } from '@/entities/doc'
 
-export type CabinetTab = 'courses' | 'assignments' | 'achievements' | 'activity' | 'settings'
+export type CabinetTab = 'courses' | 'assignments' | 'notes' | 'achievements' | 'activity' | 'settings'
 
 export function useCabinetDashboard() {
   const progressStore = useDocProgressStore()

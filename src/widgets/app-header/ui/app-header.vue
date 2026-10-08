@@ -4,9 +4,11 @@ import AppHeaderThemeToggle from "./app-header-theme-toggle.vue";
 import AppHeaderMobile from "./app-header-mobile.vue";
 import AppHeaderRoleSwitcher from "./app-header-role-switcher.vue";
 import { useUserSessionStore } from "@/entities/user";
+import { useCommandPalette } from "@/features/command-palette";
 
 // #region composable
 const sessionStore = useUserSessionStore();
+const { open: openCommandPalette } = useCommandPalette();
 
 const {
   navLinks,
@@ -96,8 +98,20 @@ const {
         </nav>
       </div>
 
-      <!-- Правая часть: Переключатель Роли + Профиль/Войти + Круглая тема + Мобильный гамбургер -->
+      <!-- Правая часть: Поиск + Переключатель Роли + Профиль/Войти + Круглая тема + Мобильный гамбургер -->
       <div class="app-header__actions">
+        <!-- 0. Кнопка вызова Command Palette (Ctrl+K) -->
+        <button
+          type="button"
+          class="app-header__search-trigger"
+          title="Быстрый поиск и команды (Ctrl+K)"
+          @click="openCommandPalette"
+        >
+          <span class="search-trigger__icon">🔍</span>
+          <span class="search-trigger__label">Поиск</span>
+          <kbd class="search-trigger__kbd">Ctrl K</kbd>
+        </button>
+
         <!-- 1. Интерактивный переключатель роли (RBAC) -->
         <AppHeaderRoleSwitcher />
 
@@ -285,7 +299,56 @@ const {
   &__actions {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0.85rem;
+  }
+
+  &__search-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.65rem 0.35rem 0.6rem;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--text-muted, #94a3b8);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(129, 140, 248, 0.4);
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+
+    .search-trigger__icon {
+      font-size: 0.85rem;
+    }
+
+    .search-trigger__label {
+      font-size: 0.82rem;
+
+      @media (max-width: 640px) {
+        display: none;
+      }
+    }
+
+    .search-trigger__kbd {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #cbd5e1;
+      padding: 0.1rem 0.35rem;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-family: inherit;
+      font-weight: 600;
+
+      @media (max-width: 768px) {
+        display: none;
+      }
+    }
   }
 
   &__auth-btn {
