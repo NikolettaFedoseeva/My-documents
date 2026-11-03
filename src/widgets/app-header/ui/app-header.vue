@@ -3,14 +3,15 @@ import { ref } from "vue";
 import { useAppHeader } from "../model/use-app-header";
 import AppHeaderThemeToggle from "./app-header-theme-toggle.vue";
 import AppHeaderMobile from "./app-header-mobile.vue";
-import AppHeaderRoleSwitcher from "./app-header-role-switcher.vue";
 import { useUserSessionStore } from "@/entities/user";
+import { AuthApiService } from "@/entities/auth";
 import { useCommandPalette } from "@/features/command-palette";
 import { useNotificationStore } from "@/entities/notification";
 import { NotificationPopover } from "@/features/notification-center";
 
 // #region composable
 const sessionStore = useUserSessionStore();
+
 const notificationStore = useNotificationStore();
 const { open: openCommandPalette } = useCommandPalette();
 const isNotifOpen = ref<boolean>(false);
@@ -27,6 +28,14 @@ const {
   selectTheme,
 } = useAppHeader();
 // #endregion composable
+// #region Функции
+/** Выход: сбрасываем сессию, удаляем токен и возвращаемся на главную */
+const handleLogout = (): void => {
+  AuthApiService.logout();
+  sessionStore.logout();
+  navigateTo('/');
+};
+// #endregion Функции
 </script>
 
 <template>
@@ -141,10 +150,7 @@ const {
           />
         </div>
 
-        <!-- 1. Интерактивный переключатель роли (RBAC) -->
-        <AppHeaderRoleSwitcher />
-
-        <!-- 2. Авторизованный профиль или кнопка Войти -->
+        <!-- Авторизованный профиль или кнопка Войти -->
         <button
           v-if="sessionStore.isAuthenticated"
           type="button"
@@ -161,6 +167,17 @@ const {
             class="user-avatar-img"
           />
           <span class="user-name">{{ sessionStore.currentUser.name }}</span>
+        </button>
+
+        <button
+          v-if="sessionStore.isAuthenticated"
+          type="button"
+          class="app-header__auth-btn"
+          title="Выйти из аккаунта"
+          @click="handleLogout"
+        >
+          <span class="auth-icon">🚪</span>
+          <span>Выйти</span>
         </button>
 
         <button

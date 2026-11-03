@@ -25,16 +25,9 @@ const goBack = (): void => {
   router.push('/courses')
 }
 
-const switchToAuthor = (): void => {
-  sessionStore.switchRole('author')
-  const redirect = (route.query.redirect as string) || '/author'
-  router.push(redirect)
-}
-
-const switchToAdmin = (): void => {
-  sessionStore.switchRole('admin')
-  const redirect = (route.query.redirect as string) || '/admin'
-  router.push(redirect)
+const goToAuth = (): void => {
+  const redirect = (route.query.redirect as string) || '/'
+  router.push({ path: '/auth', query: { redirect } })
 }
 // #endregion Функции
 </script>
@@ -70,22 +63,8 @@ const switchToAdmin = (): void => {
           <span>← Вернуться к курсам</span>
         </UiButton>
 
-        <UiButton
-          v-if="requiredRole.includes('author')"
-          variant="primary"
-          size="md"
-          @click="switchToAuthor"
-        >
-          <span>✍️ Переключиться на Автора</span>
-        </UiButton>
-
-        <UiButton
-          v-if="requiredRole.includes('admin')"
-          variant="danger"
-          size="md"
-          @click="switchToAdmin"
-        >
-          <span>👑 Переключиться на Админа</span>
+        <UiButton variant="primary" size="md" @click="goToAuth">
+          <span>🔑 Войти под другим аккаунтом</span>
         </UiButton>
       </div>
     </UiCard>

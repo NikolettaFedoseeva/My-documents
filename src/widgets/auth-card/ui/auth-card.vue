@@ -11,7 +11,6 @@ import { useUserSessionStore, UserRole } from '@/entities/user'
 import AuthCardTabs from './auth-card-tabs.vue'
 import { LoginForm } from '@/features/login-by-email'
 import { RegisterForm } from '@/features/register-by-email'
-import { SocialAuthButtons } from '@/features/social-auth'
 
 const router = useRouter()
 const route = useRoute()
@@ -74,9 +73,9 @@ const handleLogin = async (payload: LoginPayload): Promise<void> => {
           res.user.avatar ||
           'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80',
         status: 'online',
-        unreadNotificationsCount: 1,
-        xp: res.user.xp || 100,
-        level: res.user.level || 1,
+        unreadNotificationsCount: 0,
+        xp: res.user.xp ?? 0,
+        level: res.user.level ?? 1,
       })
 
       const target = resolveRedirectTarget(res.user.role)
@@ -109,9 +108,9 @@ const handleRegister = async (payload: RegisterPayload): Promise<void> => {
           res.user.avatar ||
           'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80',
         status: 'online',
-        unreadNotificationsCount: 1,
-        xp: res.user.xp || 100,
-        level: res.user.level || 1,
+        unreadNotificationsCount: 0,
+        xp: res.user.xp ?? 0,
+        level: res.user.level ?? 1,
       })
 
       const target = resolveRedirectTarget(res.user.role)
@@ -129,15 +128,6 @@ const handleRegister = async (payload: RegisterPayload): Promise<void> => {
   }
 }
 
-const handleQuickDemoLogin = (role: UserRole): void => {
-  sessionStore.switchRole(role)
-  const target = resolveRedirectTarget(role)
-  successMessage.value = `Вход под ролью «${sessionStore.currentRoleInfo.name}»...`
-  setTimeout(() => {
-    router.push(target)
-  }, 600)
-}
-
 const handleForgotPassword = async (): Promise<void> => {
   if (!forgotEmail.value) {
     errorMessage.value = 'Укажите Ваш email'
@@ -146,33 +136,17 @@ const handleForgotPassword = async (): Promise<void> => {
   isSubmitting.value = true
   errorMessage.value = ''
   try {
-    await AuthApiService.resetPassword({ email: forgotEmail.value })
-    successMessage.value = 'Ссылка для восстановления отправлена на ваш email!'
+    const res = await AuthApiService.resetPassword({ email: forgotEmail.value })
+    if (res.success) {
+      successMessage.value = 'Если такой email существует, мы отправили на него инструкцию по восстановлению.'
+    } else {
+      errorMessage.value = res.errorMessage || 'Не удалось отправить инструкцию'
+    }
   } finally {
     isSubmitting.value = false
   }
 }
 
-const handleSocialAuth = (provider: string): void => {
-  const mockUserRole: UserRole = redirectUrl.value.includes('/author') ? 'author' : 'student'
-  sessionStore.loginAs({
-    id: `usr-soc-${Date.now()}`,
-    name: `${provider.toUpperCase()} Пользователь`,
-    email: `user@${provider}.com`,
-    role: mockUserRole,
-    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80',
-    status: 'online',
-    unreadNotificationsCount: 0,
-    xp: 200,
-    level: 2,
-  })
-
-  const target = resolveRedirectTarget(mockUserRole)
-  successMessage.value = `Вход через ${provider.toUpperCase()} успешен!`
-  setTimeout(() => {
-    router.push(target)
-  }, 600)
-}
 // #endregion Функции
 </script>
 
@@ -197,37 +171,6 @@ const handleSocialAuth = (provider: string): void => {
     <!-- Предупреждение о необходимости входа для доступа к странице (Redirect Notice) -->
     <div v-if="redirectNotice" class="auth-card__redirect-notice">
       <span>{{ redirectNotice }}</span>
-    </div>
-
-    <!-- Быстрый демо-вход для мгновенного тестирования -->
-    <div v-if="activeMode !== 'forgot'" class="auth-card__quick-box">
-      <span class="auth-card__quick-title">⚡ Быстрый вход для тестирования ролей:</span>
-      <div class="auth-card__quick-buttons">
-        <button
-          type="button"
-          class="btn-quick btn-quick--student"
-          title="Войти как Студент"
-          @click="handleQuickDemoLogin('student')"
-        >
-          <span>🎓 Студент</span>
-        </button>
-        <button
-          type="button"
-          class="btn-quick btn-quick--author"
-          title="Войти как Автор"
-          @click="handleQuickDemoLogin('author')"
-        >
-          <span>✍️ Автор</span>
-        </button>
-        <button
-          type="button"
-          class="btn-quick btn-quick--admin"
-          title="Войти как Администратор"
-          @click="handleQuickDemoLogin('admin')"
-        >
-          <span>👑 Админ</span>
-        </button>
-      </div>
     </div>
 
     <!-- Табы Login / Register -->
@@ -292,12 +235,6 @@ const handleSocialAuth = (provider: string): void => {
         ← Вернуться ко входу
       </button>
     </div>
-
-    <!-- Социальные сети -->
-    <SocialAuthButtons
-      v-if="activeMode !== 'forgot'"
-      @select-provider="handleSocialAuth"
-    />
   </div>
 </template>
 
@@ -357,28 +294,6 @@ const handleSocialAuth = (provider: string): void => {
     padding: 0.65rem 0.85rem;
     border-radius: 10px;
     line-height: 1.4;
-  }
-
-  &__quick-box {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px dashed rgba(255, 255, 255, 0.15);
-    padding: 0.75rem 0.85rem;
-    border-radius: 12px;
-  }
-
-  &__quick-title {
-    font-size: 0.75rem;
-    color: #94a3b8;
-    font-weight: 600;
-  }
-
-  &__quick-buttons {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.4rem;
   }
 
   &__success {
@@ -467,41 +382,6 @@ const handleSocialAuth = (provider: string): void => {
     &:hover {
       color: #ffffff;
     }
-  }
-}
-
-.btn-quick {
-  background: rgba(30, 41, 59, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 0.4rem 0.5rem;
-  border-radius: 8px;
-  color: #e2e8f0;
-  font-size: 0.75rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-
-  &:hover {
-    transform: translateY(-1px);
-  }
-
-  &--student:hover {
-    background: rgba(16, 185, 129, 0.2);
-    border-color: rgba(16, 185, 129, 0.4);
-    color: #6ee7b7;
-  }
-
-  &--author:hover {
-    background: rgba(168, 85, 247, 0.2);
-    border-color: rgba(168, 85, 247, 0.4);
-    color: #e9d5ff;
-  }
-
-  &--admin:hover {
-    background: rgba(234, 179, 8, 0.2);
-    border-color: rgba(234, 179, 8, 0.4);
-    color: #fef08a;
   }
 }
 </style>

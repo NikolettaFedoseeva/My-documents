@@ -33,69 +33,24 @@ export const ROLES_LIST: RoleInfo[] = [
   },
 ]
 
-export const PRESET_USERS: Record<UserRole, User> = {
-  guest: {
-    id: 'usr-guest',
-    name: 'Гость платформы',
-    email: 'guest@lern.dev',
-    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80',
-    role: 'guest',
-    status: 'online',
-    unreadNotificationsCount: 0,
-    xp: 0,
-    level: 1,
-  },
-  student: {
-    id: 'usr-student-1',
-    name: 'Алексей Смирнов',
-    email: 'student@lern.dev',
-    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80',
-    role: 'student',
-    status: 'online',
-    unreadNotificationsCount: 2,
-    xp: 350,
-    level: 2,
-  },
-  author: {
-    id: 'usr-author-1',
-    name: 'Елена Ветрова',
-    email: 'author@lern.dev',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=120&q=80',
-    role: 'author',
-    status: 'online',
-    unreadNotificationsCount: 5,
-    xp: 1450,
-    level: 6,
-  },
-  teacher: {
-    id: 'usr-author-1',
-    name: 'Елена Ветрова (Преподаватель)',
-    email: 'author@lern.dev',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=120&q=80',
-    role: 'author',
-    status: 'online',
-    unreadNotificationsCount: 5,
-    xp: 1450,
-    level: 6,
-  },
-  admin: {
-    id: 'usr-admin-1',
-    name: 'Николай Админ',
-    email: 'admin@lern.dev',
-    avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=120&q=80',
-    role: 'admin',
-    status: 'online',
-    unreadNotificationsCount: 9,
-    xp: 5200,
-    level: 12,
-  },
+/** Профиль гостя — состояние по умолчанию для неавторизованного посетителя */
+export const GUEST_USER: User = {
+  id: 'usr-guest',
+  name: 'Гость платформы',
+  email: '',
+  avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80',
+  role: 'guest',
+  status: 'online',
+  unreadNotificationsCount: 0,
+  xp: 0,
+  level: 1,
 }
 
 const STORAGE_KEY = 'lern_user_session_v1'
 
 export const useUserSessionStore = defineStore('userSession', () => {
   // #region State
-  const currentUser = ref<User>(PRESET_USERS.student)
+  const currentUser = ref<User>({ ...GUEST_USER })
   // #endregion State
 
   // #region Computed
@@ -164,14 +119,8 @@ export const useUserSessionStore = defineStore('userSession', () => {
     } catch (e) {
       console.warn('[UserSessionStore] Ошибка гидрации сессии из LocalStorage:', e)
     }
-    // По умолчанию авторизован студент
-    currentUser.value = PRESET_USERS.student
-  }
-
-  const switchRole = (role: UserRole): void => {
-    const preset = PRESET_USERS[role] || PRESET_USERS.student
-    currentUser.value = { ...preset }
-    saveSession()
+    // По умолчанию — неавторизованный гость
+    currentUser.value = { ...GUEST_USER }
   }
 
   const loginAs = (user: User): void => {
@@ -180,7 +129,7 @@ export const useUserSessionStore = defineStore('userSession', () => {
   }
 
   const logout = (): void => {
-    currentUser.value = { ...PRESET_USERS.guest }
+    currentUser.value = { ...GUEST_USER }
     saveSession()
   }
 
@@ -213,7 +162,6 @@ export const useUserSessionStore = defineStore('userSession', () => {
 
     // Actions
     initSession,
-    switchRole,
     loginAs,
     logout,
   }

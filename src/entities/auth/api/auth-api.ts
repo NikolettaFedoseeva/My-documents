@@ -1,83 +1,46 @@
 import { LoginPayload, RegisterPayload, ResetPasswordPayload, AuthResponse } from '../types'
-import { UserApiService, UserRole, User } from '@/entities/user'
 import { API_BASE_URL } from '@/shared/api'
 
 const AUTH_API_URL = `${API_BASE_URL}/auth`
+const TOKEN_KEY = 'lern_token'
+const NETWORK_ERROR_MESSAGE = 'Сервер недоступен. Проверьте соединение и попробуйте позже.'
 
+/**
+ * Сервис аутентификации.
+ * Работает только с реальным бэкендом: при сетевой ошибке вход и регистрация
+ * НЕ эмулируются, пользователь получает понятное сообщение.
+ */
 export class AuthApiService {
+  /**
+   * Отправка JSON-запроса к auth API и разбор ответа
+   */
+  private static async post(path: string, body: unknown): Promise<AuthResponse> {
+    const response = await fetch(`${AUTH_API_URL}${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    const data = (await response.json()) as AuthResponse
+    if (response.ok && data.success) {
+      if (data.token) {
+        localStorage.setItem(TOKEN_KEY, data.token)
+      }
+      return data
+    }
+    return { success: false, errorMessage: data.errorMessage || 'Ошибка запроса' }
+  }
+
   /**
    * Выполнение входа по email и паролю
    */
   static async login(payload: LoginPayload): Promise<AuthResponse> {
+    if (!payload.email || !payload.password) {
+      return { success: false, errorMessage: 'Пожалуйста, заполните все обязательные поля.' }
+    }
     try {
-      const response = await fetch(`${AUTH_API_URL}/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
-      const data = await response.json()
-      if (response.ok && data.success) {
-        if (data.token) {
-          localStorage.setItem('lern_token', data.token)
-        }
-        return data
-      }
-      return { success: false, errorMessage: data.errorMessage || 'Ошибка входа' }
+      return await AuthApiService.post('/login', payload)
     } catch (err) {
-      // Fallback эмуляция при отсутствии активного бэкенда
-      if (!payload.email || !payload.password) {
-        return { success: false, errorMessage: 'Пожалуйста, заполните все обязательные поля.' }
-      }
-
-      const allUsers = await UserApiService.getAllUsers()
-      const normalizedEmail = payload.email.trim().toLowerCase()
-      const foundUser = allUsers.find((u) => u.email.toLowerCase() === normalizedEmail)
-
-      if (foundUser) {
-        if (foundUser.isBanned) {
-          return {
-            success: false,
-            errorMessage: 'Учетная запись заблокирована администратором системы.',
-          }
-        }
-
-        const token = `jwt-token-${foundUser.id}`
-        localStorage.setItem('lern_token', token)
-        return {
-          success: true,
-          token,
-          user: {
-            id: foundUser.id,
-            name: foundUser.name,
-            email: foundUser.email,
-            role: foundUser.role,
-            avatar: foundUser.avatar,
-            xp: foundUser.xp,
-            level: foundUser.level,
-          },
-        }
-      }
-
-      // Если аккаунт не найден, создаем профиль на лету с ролью на основе email
-      let inferredRole: UserRole = 'student'
-      if (normalizedEmail.includes('admin')) {
-        inferredRole = 'admin'
-      } else if (normalizedEmail.includes('author') || normalizedEmail.includes('teacher')) {
-        inferredRole = 'author'
-      }
-
-      const token = 'jwt-mock-token-lern-2026'
-      localStorage.setItem('lern_token', token)
-      return {
-        success: true,
-        token,
-        user: {
-          id: `usr-${Date.now()}`,
-          name: payload.email.split('@')[0] || 'Пользователь',
-          email: payload.email,
-          role: inferredRole,
-        },
-      }
+      return { success: false, errorMessage: NETWORK_ERROR_MESSAGE }
     }
   }
 
@@ -88,62 +51,10 @@ export class AuthApiService {
     if (payload.password !== payload.confirmPassword) {
       return { success: false, errorMessage: 'Пароли не совпадают.' }
     }
-
     try {
-      const response = await fetch(`${AUTH_API_URL}/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
-      const data = await response.json()
-      if (response.ok && data.success) {
-        if (data.token) {
-          localStorage.setItem('lern_token', data.token)
-        }
-        return data
-      }
-      return { success: false, errorMessage: data.errorMessage || 'Ошибка регистрации' }
+      return await AuthApiService.post('/register', payload)
     } catch (err) {
-      const token = `jwt-token-new-${Date.now()}`
-      localStorage.setItem('lern_token', token)
-
-      const targetRole: UserRole = payload.role === 'teacher' ? 'author' : (payload.role as UserRole)
-      const newUser: User = {
-        id: `usr-${Date.now()}`,
-        name: payload.name.trim(),
-        email: payload.email.trim(),
-        avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
-        role: targetRole,
-        status: 'online',
-        unreadNotificationsCount: 1,
-        xp: 100,
-        level: 1,
-        createdAt: new Date().toISOString().split('T')[0],
-        isBanned: false,
-      }
-
-      // Сохраняем в реестр пользователей платформы
-      try {
-        const users = await UserApiService.getAllUsers()
-        users.push(newUser)
-        localStorage.setItem('lern_admin_users_v1', JSON.stringify(users))
-      } catch (e) {
-        console.warn('Не удалось сохранить нового пользователя в админку:', e)
-      }
-
-      return {
-        success: true,
-        token,
-        user: {
-          id: newUser.id,
-          name: newUser.name,
-          email: newUser.email,
-          role: newUser.role,
-          avatar: newUser.avatar,
-          xp: newUser.xp,
-          level: newUser.level,
-        },
-      }
+      return { success: false, errorMessage: NETWORK_ERROR_MESSAGE }
     }
   }
 
@@ -152,15 +63,16 @@ export class AuthApiService {
    */
   static async resetPassword(payload: ResetPasswordPayload): Promise<AuthResponse> {
     try {
-      const response = await fetch(`${API_BASE_URL}/forgot-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
-      const data = await response.json()
-      return data
+      return await AuthApiService.post('/forgot-password', payload)
     } catch (err) {
-      return { success: true }
+      return { success: false, errorMessage: NETWORK_ERROR_MESSAGE }
     }
+  }
+
+  /**
+   * Выход: удаляет токен из хранилища
+   */
+  static logout(): void {
+    localStorage.removeItem(TOKEN_KEY)
   }
 }

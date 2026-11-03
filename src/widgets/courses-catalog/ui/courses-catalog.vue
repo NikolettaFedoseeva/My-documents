@@ -46,15 +46,7 @@ const {
             <span>✍️ Кабинет автора & Конструктор курсов</span>
           </button>
           <button
-            v-else-if="sessionStore.isAuthenticated"
-            type="button"
-            class="btn-author"
-            @click="sessionStore.switchRole('author'); openAuthorStudio()"
-          >
-            <span>✨ Стать автором & Создать свой курс</span>
-          </button>
-          <button
-            v-else
+            v-else-if="!sessionStore.isAuthenticated"
             type="button"
             class="btn-author"
             @click="router.push('/auth')"
