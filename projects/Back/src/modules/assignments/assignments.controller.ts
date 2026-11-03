@@ -1,6 +1,6 @@
 import { Router, Response } from 'express'
 import { AssignmentsService } from './assignments.service'
-import { authMiddleware, AuthenticatedRequest } from '../../middlewares/auth.middleware'
+import { authMiddleware, requireRoles, AuthenticatedRequest } from '../../middlewares/auth.middleware'
 
 export const assignmentsRouter = Router()
 
@@ -9,7 +9,7 @@ assignmentsRouter.use(authMiddleware)
 // Получить все задания текущего пользователя
 assignmentsRouter.get('/', async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const userId = req.user?.userId || 'usr-student-1'
+    const userId = req.user!.userId
     const items = await AssignmentsService.getUserAssignments(userId)
     res.json(items)
   } catch (err: any) {
@@ -20,7 +20,7 @@ assignmentsRouter.get('/', async (req: AuthenticatedRequest, res: Response) => {
 // Отправить решение задания
 assignmentsRouter.post('/:id/submit', async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const userId = req.user?.userId || 'usr-student-1'
+    const userId = req.user!.userId
     const { repoUrl, code, notes } = req.body
     const updated = await AssignmentsService.submitAssignment(userId, req.params.id, {
       repoUrl,
@@ -34,13 +34,16 @@ assignmentsRouter.post('/:id/submit', async (req: AuthenticatedRequest, res: Res
 })
 
 // Оценить задание ментором
-assignmentsRouter.patch('/:id/grade', async (req: AuthenticatedRequest, res: Response) => {
+assignmentsRouter.patch('/:id/grade', requireRoles('admin', 'teacher', 'author'), async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const userId = req.body.userId || req.user?.userId || 'usr-student-1'
+    const userId = typeof req.body.userId === 'string' && req.body.userId ? req.body.userId : req.user!.userId
     const { status, score, comment, reviewerName } = req.body
+    if (status !== 'passed' && status !== 'rejected') {
+      return res.status(400).json({ success: false, errorMessage: 'Статус должен быть passed или rejected.' })
+    }
     const updated = await AssignmentsService.gradeAssignment(userId, req.params.id, {
       status,
-      score: Number(score) || 0,
+      score: Math.min(100, Math.max(0, Number(score) || 0)),
       comment: comment || 'Работа проверена.',
       reviewerName,
     })

@@ -1,4 +1,4 @@
-export type UserRole = 'student' | 'teacher' | 'admin' | 'guest'
+export type UserRole = 'student' | 'author' | 'teacher' | 'admin' | 'guest'
 export type UserStatus = 'online' | 'busy' | 'offline'
 
 export interface UserRecord {

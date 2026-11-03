@@ -126,7 +126,7 @@ coursesRouter.delete('/docs/:id', authMiddleware, requireRoles('admin'), async (
   }
 })
 
-coursesRouter.post('/import', async (req: Request, res: Response) => {
+coursesRouter.post('/import', authMiddleware, requireRoles('admin', 'author'), async (req: Request, res: Response) => {
   try {
     const { course, overwrite } = req.body
     if (!course) {

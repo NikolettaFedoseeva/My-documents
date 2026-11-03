@@ -76,28 +76,27 @@ CREATE TABLE IF NOT EXISTS public.user_progress (
 -- ========================================================
 -- ПОЛИТИКИ ДОСТУПА (Row Level Security)
 -- ========================================================
+-- RLS включён, политик для anon/authenticated НЕТ намеренно: прямой доступ к таблицам
+-- через публичный (publishable) ключ закрыт полностью. Всё идёт через бэкенд,
+-- который использует service_role-ключ (он обходит RLS) и сам проверяет права.
+-- ⚠️ Не добавляйте политики вида USING (true): публичный ключ виден в браузере,
+--    и тогда любой сможет читать password_hash и менять роли.
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.courses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.docs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_progress ENABLE ROW LEVEL SECURITY;
 
--- Разрешаем чтение и запись через API (публичный/сервисный доступ)
-CREATE POLICY "Public full access users" ON public.users FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Public full access courses" ON public.courses FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Public full access categories" ON public.categories FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Public full access docs" ON public.docs FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Public full access user_progress" ON public.user_progress FOR ALL USING (true) WITH CHECK (true);
-
 -- ========================================================
 -- НАЧАЛЬНЫЕ ДАННЫЕ (SEEDS)
 -- ========================================================
 -- 1. Администратор (пароль: admin123, хэш bcrypt)
+-- ⚠️ ТОЛЬКО ДЛЯ РАЗРАБОТКИ: перед релизом сменить пароли демо-аккаунтов или удалить их
 INSERT INTO public.users (id, email, password_hash, name, role, xp, level, avatar)
 VALUES (
   'usr-admin-1',
   'admin@lern.ru',
-  '$2a$10$wE39i3J4yX13kS87tFj6GepLp/hS8iFwz3rWlX6sN0z6ZqL4vQyhe',
+  '$2a$10$kt1zBBbD0l4..dgt8p5IxOXJv4F.J8mlYsm0vO.mPXgaGCPWWw0lK',
   'Николай (Администратор)',
   'admin',
   2500,
@@ -110,7 +109,7 @@ INSERT INTO public.users (id, email, password_hash, name, role, xp, level, avata
 VALUES (
   'usr-student-1',
   'student@lern.ru',
-  '$2a$10$wE39i3J4yX13kS87tFj6GepLp/hS8iFwz3rWlX6sN0z6ZqL4vQyhe',
+  '$2a$10$B/aw9ZtMsUDWoOeyfTc6K.LWCFlZ1r9nDFPhL7wbkydGTTReGIrL.',
   'Алексей (Студент)',
   'student',
   350,

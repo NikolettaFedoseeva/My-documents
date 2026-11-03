@@ -1,15 +1,24 @@
 import { Router, Request, Response } from 'express'
 import { UsersService } from './users.service'
-import { authMiddleware, requireRoles, AuthenticatedRequest } from '../../middlewares/auth.middleware'
+import {
+  authMiddleware,
+  requireRoles,
+  requireSelfOrAdmin,
+  AuthenticatedRequest,
+} from '../../middlewares/auth.middleware'
 
 export const usersRouter = Router()
 
-usersRouter.get('/', async (req: Request, res: Response) => {
+// Все маршруты пользователей требуют входа
+usersRouter.use(authMiddleware)
+
+// Список пользователей — только администратору
+usersRouter.get('/', requireRoles('admin'), async (req: Request, res: Response) => {
   try {
     const { search, role } = req.query
     const users = await UsersService.getAllUsers({
-      search: search as string,
-      role: role as string,
+      search: typeof search === 'string' ? search : undefined,
+      role: typeof role === 'string' ? role : undefined,
     })
     res.json(users)
   } catch (err: any) {
@@ -17,7 +26,8 @@ usersRouter.get('/', async (req: Request, res: Response) => {
   }
 })
 
-usersRouter.get('/:id', async (req: Request, res: Response) => {
+// Профиль — владельцу или администратору
+usersRouter.get('/:id', requireSelfOrAdmin, async (req: Request, res: Response) => {
   try {
     const user = await UsersService.getUserById(req.params.id)
     res.json(user)
@@ -26,7 +36,10 @@ usersRouter.get('/:id', async (req: Request, res: Response) => {
   }
 })
 
-usersRouter.patch('/:id/role', authMiddleware, requireRoles('admin'), async (req: Request, res: Response) => {
+usersRouter.patch('/:id/role', requireRoles('admin'), async (req: AuthenticatedRequest, res: Response) => {
+  if (req.user?.userId === req.params.id) {
+    return res.status(400).json({ success: false, errorMessage: 'Нельзя изменить собственную роль.' })
+  }
   try {
     const user = await UsersService.updateRole(req.params.id, req.body.role)
     res.json({ success: true, user })
@@ -35,7 +48,10 @@ usersRouter.patch('/:id/role', authMiddleware, requireRoles('admin'), async (req
   }
 })
 
-usersRouter.patch('/:id/ban', authMiddleware, requireRoles('admin'), async (req: Request, res: Response) => {
+usersRouter.patch('/:id/ban', requireRoles('admin'), async (req: AuthenticatedRequest, res: Response) => {
+  if (req.user?.userId === req.params.id) {
+    return res.status(400).json({ success: false, errorMessage: 'Нельзя заблокировать самого себя.' })
+  }
   try {
     const user = await UsersService.toggleBan(req.params.id, Boolean(req.body.isBanned))
     res.json({ success: true, user })
@@ -44,7 +60,8 @@ usersRouter.patch('/:id/ban', authMiddleware, requireRoles('admin'), async (req:
   }
 })
 
-usersRouter.patch('/:id/profile', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+// Редактировать профиль можно только свой (администратору — любой)
+usersRouter.patch('/:id/profile', requireSelfOrAdmin, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const user = await UsersService.updateProfile(req.params.id, req.body)
     res.json({ success: true, user })
@@ -53,7 +70,10 @@ usersRouter.patch('/:id/profile', authMiddleware, async (req: AuthenticatedReque
   }
 })
 
-usersRouter.delete('/:id', authMiddleware, requireRoles('admin'), async (req: Request, res: Response) => {
+usersRouter.delete('/:id', requireRoles('admin'), async (req: AuthenticatedRequest, res: Response) => {
+  if (req.user?.userId === req.params.id) {
+    return res.status(400).json({ success: false, errorMessage: 'Нельзя удалить самого себя.' })
+  }
   try {
     await UsersService.deleteUser(req.params.id)
     res.json({ success: true })

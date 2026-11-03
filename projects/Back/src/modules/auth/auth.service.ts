@@ -1,89 +1,60 @@
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { supabase, supabaseAdmin } from '../../config/supabase'
-import { LoginDto, RegisterDto, ResetPasswordDto, UserRecord, JwtPayload } from '../../types'
+import { env } from '../../config/env'
+import { LoginDto, RegisterDto, ResetPasswordDto, UserRecord, JwtPayload, UserRole } from '../../types'
 
-// Локальное хранилище пользователей (для fallback/эмуляции при отсутствии прямой связи с Supabase DB)
-const MOCK_USERS_DB: Map<string, UserRecord> = new Map()
+/** Роли, которые пользователь может выбрать сам при регистрации. admin/teacher назначаются только администратором. */
+const SELF_REGISTER_ROLES: readonly UserRole[] = ['student', 'author']
+
+const MIN_PASSWORD_LENGTH = 8
+const BCRYPT_ROUNDS = 10
+/** Код ошибки PostgreSQL «нарушение уникальности» */
+const PG_UNIQUE_VIOLATION = '23505'
+
+const normalizeEmail = (email: string): string => email.trim().toLowerCase()
 
 export class AuthService {
-  private static jwtSecret = process.env.JWT_SECRET || 'lern_super_secret_jwt_key_2026'
-
   /**
    * Регистрация нового пользователя
    */
   static async register(dto: RegisterDto) {
-    const { email, password, name, role = 'student' } = dto
+    const name = (dto.name || '').trim()
+    const email = normalizeEmail(dto.email || '')
+    const password = dto.password || ''
 
     if (!email || !password || !name) {
       throw new Error('Имя, Email и Пароль обязательны для заполнения.')
     }
 
-    if (password.length < 4) {
-      throw new Error('Пароль должен быть не менее 4 символов.')
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      throw new Error(`Пароль должен быть не менее ${MIN_PASSWORD_LENGTH} символов.`)
     }
 
-    // Хэширование пароля
-    const salt = await bcrypt.genSalt(10)
-    const passwordHash = await bcrypt.hash(password, salt)
+    // Роль из запроса не доверяется: допускаем только безопасный белый список
+    const requestedRole: UserRole = dto.role === 'teacher' ? 'author' : dto.role || 'student'
+    const role: UserRole = SELF_REGISTER_ROLES.includes(requestedRole) ? requestedRole : 'student'
 
-    // Сохранение в Supabase DB через административный клиент
-    try {
-      const { data, error } = await supabaseAdmin
-        .from('users')
-        .insert([
-          {
-            email,
-            password_hash: passwordHash,
-            name,
-            role,
-            status: 'online',
-          },
-        ])
-        .select()
-        .single()
+    const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS)
 
-      if (data && !error) {
-        const token = this.generateToken({ userId: data.id, email: data.email, role: data.role })
-        return {
-          success: true,
-          token,
-          user: {
-            id: data.id,
-            name: data.name,
-            email: data.email,
-            role: data.role,
-          },
-        }
+    const { data, error } = await supabaseAdmin
+      .from('users')
+      .insert([{ email, password_hash: passwordHash, name, role, status: 'online' }])
+      .select()
+      .single()
+
+    if (error || !data) {
+      if (error?.code === PG_UNIQUE_VIOLATION) {
+        throw new Error('Пользователь с таким Email уже зарегистрирован.')
       }
-    } catch (err) {
-      console.warn('[Supabase Fallback] БД недоступна, задействуем локальный кэш сервиса.')
+      console.error('[AuthService.register] Ошибка БД:', error?.message)
+      throw new Error('Не удалось создать аккаунт. Попробуйте позже.')
     }
 
-    // Fallback режим
-    const userId = `usr-${Date.now()}`
-    const newUser: UserRecord = {
-      id: userId,
-      email,
-      name,
-      password_hash: passwordHash,
-      role,
-      status: 'online',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    }
-    MOCK_USERS_DB.set(email.toLowerCase(), newUser)
-
-    const token = this.generateToken({ userId, email, role })
     return {
       success: true,
-      token,
-      user: {
-        id: userId,
-        name,
-        email,
-        role,
-      },
+      token: this.generateToken({ userId: data.id, email: data.email, role: data.role }),
+      user: { id: data.id, name: data.name, email: data.email, role: data.role },
     }
   }
 
@@ -91,65 +62,35 @@ export class AuthService {
    * Авторизация пользователя по Email и паролю
    */
   static async login(dto: LoginDto) {
-    const { email, password } = dto
+    const email = normalizeEmail(dto.email || '')
+    const password = dto.password || ''
 
     if (!email || !password) {
       throw new Error('Заполните Email и Пароль.')
     }
 
-    let userRecord: UserRecord | null = null
+    const { data, error } = await supabaseAdmin.from('users').select('*').eq('email', email).maybeSingle()
 
-    // Проверка через Supabase DB
-    try {
-      const { data, error } = await supabaseAdmin
-        .from('users')
-        .select('*')
-        .eq('email', email.toLowerCase())
-        .single()
-
-      if (data && !error) {
-        userRecord = data
-      }
-    } catch (err) {
-      console.warn('[Supabase Fallback] Ошибка обращения к таблице users.')
+    if (error) {
+      console.error('[AuthService.login] Ошибка БД:', error.message)
+      throw new Error('Не удалось выполнить вход. Попробуйте позже.')
     }
 
-    // Fallback к локальной памяти
-    if (!userRecord) {
-      userRecord = MOCK_USERS_DB.get(email.toLowerCase()) || null
-    }
+    const userRecord = data as (UserRecord & { is_banned?: boolean }) | null
 
-    if (!userRecord) {
-      // Имитируем дефолтного пользователя для демонстрации
-      const salt = await bcrypt.genSalt(10)
-      const mockHash = await bcrypt.hash('123456', salt)
-      userRecord = {
-        id: 'usr-777',
-        email,
-        name: email.split('@')[0] || 'Пользователь',
-        password_hash: mockHash,
-        role: 'student',
-        status: 'online',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }
-    }
-
-    // Сравнение пароля с хэшем
-    const isMatch = await bcrypt.compare(password, userRecord.password_hash)
-    if (!isMatch && password !== '123456') {
+    // Одинаковое сообщение для «нет пользователя» и «неверный пароль» — не раскрываем, какие email существуют
+    const isMatch = userRecord ? await bcrypt.compare(password, userRecord.password_hash) : false
+    if (!userRecord || !isMatch) {
       throw new Error('Неверный логин или пароль.')
     }
 
-    const token = this.generateToken({
-      userId: userRecord.id,
-      email: userRecord.email,
-      role: userRecord.role,
-    })
+    if (userRecord.is_banned) {
+      throw new Error('Учетная запись заблокирована администратором системы.')
+    }
 
     return {
       success: true,
-      token,
+      token: this.generateToken({ userId: userRecord.id, email: userRecord.email, role: userRecord.role }),
       user: {
         id: userRecord.id,
         name: userRecord.name,
@@ -163,14 +104,15 @@ export class AuthService {
    * Восстановление пароля
    */
   static async resetPassword(dto: ResetPasswordDto) {
-    if (!dto.email) {
+    const email = normalizeEmail(dto.email || '')
+    if (!email) {
       throw new Error('Укажите корректный Email.')
     }
 
     try {
-      await supabase.auth.resetPasswordForEmail(dto.email)
+      await supabase.auth.resetPasswordForEmail(email)
     } catch (err) {
-      // Игнорируем ошибку для фронтенда
+      // Ошибку не раскрываем клиенту, чтобы нельзя было перебирать существующие email
     }
 
     return {
@@ -183,6 +125,6 @@ export class AuthService {
    * Генерация JWT токена
    */
   private static generateToken(payload: JwtPayload): string {
-    return jwt.sign(payload, this.jwtSecret, { expiresIn: '7d' })
+    return jwt.sign(payload, env.jwtSecret, { expiresIn: env.jwtExpiresIn as jwt.SignOptions['expiresIn'] })
   }
 }
