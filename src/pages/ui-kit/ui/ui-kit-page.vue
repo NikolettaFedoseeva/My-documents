@@ -28,6 +28,7 @@ import {
   UiXpChart,
 } from "lern-ui-kit";
 import { UiBanner, UiPopover, UiDateInput } from "@/shared";
+import UiKitExtraShowcase from "./ui-kit-extra-showcase.vue";
 
 import type {
   TabItem,
@@ -891,6 +892,9 @@ const demoXpPoints = ref<XpDataPoint[]>([
           </div>
         </UiCard>
       </section>
+
+      <!-- Новые компоненты: формы, макеты, графики, изображения -->
+      <UiKitExtraShowcase />
     </main>
   </div>
 </template>
