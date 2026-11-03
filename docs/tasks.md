@@ -15,7 +15,9 @@
 Флагманский стиль для интерактивного изучения материала:
 - **Атмосфера**: Элегантная академическая книга/справочник с пергаментными страницами, закладочными картами знаний и благородными тёмно-синими / бордовыми шапками.
 - **Два цветовых варианта**:
-  1. 🧭 **`codex-na  - **Right Sidebar / Study Deck**: Тренажер самопроверки с вариантами ответов (A, B, C) и 3D-флешкартами Active Recall.
+  1. 🧭 **`codex-navy`** — морской синий и светлый пергамент.
+  2. 🍷 **`codex-burgundy`** — бордово-виноградный и тёплый крем.
+- **Right Sidebar / Study Deck**: Тренажер самопроверки с вариантами ответов (A, B, C) и 3D-флешкартами Active Recall.
 
 ---
 
@@ -37,44 +39,44 @@
 - [x] **`alert`**: Всплывающие уведомления (`UiAlert`) ⭐
 - [x] **`avatar`**: Аватар пользователя (`UiAvatar`) ⭐
 - [x] **`badge`**: Плашки и счетчики (`UiBadge`) ⭐
-- [ ] **`banner`**: Информационный баннер (`UiBanner`)
+- [x] **`banner`**: Информационный баннер (`UiBanner`) ⭐
 - [x] **`button`**: Основная универсальная кнопка (`UiButton`) ⭐
-- [ ] **`button-wrapper`**: Группа кнопок (`UiButtonWrapper`)
+- [x] **`button-wrapper`**: Группа кнопок (`UiButtonWrapper`) ⭐
 - [x] **`card`**: Пергаментные и стеклянные карточки (`UiCard`) ⭐
-- [ ] **`card-form`**: Обертка карточки для форм (`UiCardForm`)
-- [ ] **`card-li-layout`**: Макет списка карточек (`UiCardLiLayout`)
+- [x] **`card-form`**: Обертка карточки для форм (`UiCardForm`) ⭐
+- [x] **`card-li-layout`**: Макет списка карточек (`UiCardLiLayout`) ⭐
 - [x] **`carousel`**: Карусель / Слайдер (`UiCarousel`) ⭐
-- [ ] **`chart`**: Графики статистики и прогресса (`UiChart`)
+- [x] **`chart`**: Графики статистики и прогресса (`UiChart`) ⭐
 - [x] **`checkbox`**: Чекбокс (`UiCheckbox`) ⭐
-- [ ] **`counter`**: Счетчик вопросов / времени (`UiCounter`)
-- [ ] **`crop-modal`**: Модалка обрезки фото (`UiCropModal`)
-- [ ] **`cropper`**: Инструмент обрезки изображений (`UiCropper`)
-- [ ] **`date-input`**: Ввод даты (`UiDateInput`)
-- [ ] **`date-picker`**: Выбор даты (`UiDatePicker`)
+- [x] **`counter`**: Счетчик вопросов / времени (`UiCounter`) ⭐
+- [x] **`crop-modal`**: Модалка обрезки фото (`UiCropModal`) ⭐
+- [x] **`cropper`**: Инструмент обрезки изображений (`UiCropper`) ⭐
+- [x] **`date-input`**: Ввод даты (`UiDateInput`) ⭐
+- [x] **`date-picker`**: Выбор даты (`UiDatePicker`) ⭐
 - [x] **`dropdown`**: Выпадающий список (`UiDropdown`) ⭐
-- [ ] **`emoji-animation`**: Анимации эмодзи (`UiEmojiAnimation`)
-- [ ] **`file-input`**: Поле загрузки файлов (`UiFileInput`)
-- [ ] **`image-list`**: Список изображений (`UiImageList`)
+- [x] **`emoji-animation`**: Анимации эмодзи (`UiEmojiAnimation`) ⭐
+- [x] **`file-input`**: Поле загрузки файлов (`UiFileInput`) ⭐
+- [x] **`image-list`**: Список изображений (`UiImageList`) ⭐
 - [x] **`input`**: Поле ввода (`UiInput`) ⭐
-- [ ] **`input-copy`**: Инпут с кнопкой скопировать (`UiInputCopy`)
+- [x] **`input-copy`**: Инпут с кнопкой скопировать (`UiInputCopy`) ⭐
 - [x] **`interactive-flashcard`**: Главная карточка вопроса Active Recall (`InteractiveFlashcard`) ⭐
-- [ ] **`label`**: Метка поля ввода (`UiLabel`)
-- [ ] **`list`**: Списки с кастомными элементами (`UiList`)
+- [x] **`label`**: Метка поля ввода (`UiLabel`) ⭐
+- [x] **`list`**: Списки с кастомными элементами (`UiList`) ⭐
 - [x] **`loader`**: Спиннер загрузки (`UiLoader`) ⭐
 - [x] **`modal`**: Модальное окно (`UiModal`) ⭐
-- [ ] **`multidropdown`**: Дропдаун с множественным выбором (`UiMultiDropdown`)
-- [ ] **`popover`**: Всплывающий контекстный блок (`UiPopover`)
+- [x] **`multidropdown`**: Дропдаун с множественным выбором (`UiMultiDropdown`) ⭐
+- [x] **`popover`**: Всплывающий контекстный блок (`UiPopover`) ⭐
 - [x] **`progressbar`**: Прогресс-бар (`UiProgressBar`) ⭐
 - [x] **`question`**: Компонент теста с выбором ответов A/B/C (`UiQuestion`) ⭐
-- [ ] **`scroll`**: Кастомный скроллбар (`UiScroll`)
+- [x] **`scroll`**: Кастомный скроллбар (`UiScroll`) ⭐
 - [x] **`table`**: Таблица данных (`UiTable`) ⭐
 - [x] **`tabs`**: Переключатель вкладок (`UiTabs`) ⭐
 - [x] **`tag`**: Тэг (`UiTag`, `UiTagsBar`) ⭐
 - [x] **`textarea`**: Многострочный ввод (`UiTextarea`) ⭐
-- [ ] **`time-picker`**: Выбор времени (`UiTimePicker`)
+- [x] **`time-picker`**: Выбор времени (`UiTimePicker`) ⭐
 - [x] **`toggle`**: Переключатель-тумблер (`UiToggle`) ⭐
 - [x] **`tooltip`**: Всплывающая подсказка (`UiTooltip`) ⭐
-- [ ] **`upload-avatar`**: Модуль загрузки аватара (`UiUploadAvatar`)
+- [x] **`upload-avatar`**: Модуль загрузки аватара (`UiUploadAvatar`) ⭐
 
 ---
 
@@ -216,6 +218,7 @@
     - [x] Кнопка в сайдбаре читалки курсов Bookish Codex (`/docs`).
 
 - [x] **Этап 10. Разработка Backend-сервиса (Node.js + Express + TypeScript + Prisma + SQLite)** 🗄️ ⭐
+  > ⚠️ Историческая запись: `lern_backend` (Prisma + SQLite) заменён сервисом `lern_host/projects/Back` на Supabase (Этап 11). Актуальный бэкенд — только `projects/Back`.
   - [x] **10.1. Инициализация и архитектура микросервиса (`lern_backend`)** ⭐
     - [x] Настройка Node.js 22, Express, TypeScript, tsx, CORS, dotenv на порту 5000.
     - [x] Подключение ORM Prisma с локальной базой данных SQLite (`dev.db`).
@@ -367,8 +370,71 @@
     - [x] `tests/unit/stores/doc-progress-store.spec.ts` — тесты отметки глав, начисления XP, уровней и сдачи квизов с изоляцией API.
     - [x] 100% успешное прохождение всех 22 тестов.
 
+- [x] **Этап 19. Подготовка к релизу: безопасность и удаление демо-режима** 🔐 ⭐
+  - [x] **19.1. Удалены демо-инструменты** ⭐
+    - [x] Переключатель ролей в шапке, быстрый демо-вход и эмуляция соцсетей (`features/social-auth`).
+    - [x] `switchRole` и пресеты ролей в `useUserSessionStore`; по умолчанию пользователь — гость.
+    - [x] Кнопка «Стать автором» в каталоге и «Переключиться на Админа» на странице 403.
+    - [x] Кнопка «Выйти» в шапке.
+  - [x] **19.2. Закрыты уязвимости фронтенда** ⭐
+    - [x] `AuthApiService`: при недоступном сервере вход и регистрация больше не эмулируются (раньше вход проходил с любым паролем, а email со словом `admin` давал роль админа).
+    - [x] Исправлен адрес сброса пароля (`/auth/forgot-password`).
+  - [x] **19.3. Закрыты уязвимости бэкенда (`projects/Back`)** ⭐
+    - [x] Убран вход по паролю `123456` и автосоздание пользователей при логине; убран in-memory fallback.
+    - [x] Роль при регистрации — белый список (`student`, `author`); раньше можно было зарегистрироваться админом.
+    - [x] Проверка блокировки (`is_banned`) при входе, одинаковое сообщение для «нет пользователя» / «неверный пароль», минимум 8 символов пароля.
+    - [x] `config/env.ts`: `JWT_SECRET` (≥ 32 символов) и ключи Supabase обязательны, запасных значений в коде нет.
+    - [x] CORS только по белому списку `CORS_ORIGIN`; лимит тела запроса 2 МБ.
+    - [x] В `supabase-schema.sql` исправлены хеши демо-аккаунтов (прежний хеш не соответствовал паролям).
+  - [x] **19.4. Корневой `.env` убран из git, добавлен `.env.example`** ⭐
 
+- [x] **Этап 20. Unit-тесты сервисов и логики UI Kit** 🧪 ⭐
+  - [x] Сервисы: `apiFetch`/`getAuthHeaders`, `AuthApiService`, `UserApiService`, `DocProgressApiService`, `DocHttpRepository`, `CourseApiService`.
+  - [x] Стор сессии `useUserSessionStore` (гость по умолчанию, права, восстановление сессии).
+  - [x] Чистая логика новых компонентов: календарь, время, файлы, счётчик, графики, кадрирование, эмодзи-частицы.
+  - [x] Всего тестов: 157 (было 22).
 
+- [x] **Этап 21. Дооснащение UI Kit (`lern_ui_kit`)** 🧱 ⭐
+  - [x] Формы: `UiLabel`, `UiInputCopy`, `UiCardForm`, `UiDatePicker`, `UiTimePicker`, `UiMultiDropdown`, `UiFileInput`.
+  - [x] Макеты: `UiButtonWrapper`, `UiCardLiLayout`, `UiList`, `UiImageList`, `UiCounter`, `UiScroll`, `UiChart`.
+  - [x] Медиа: `UiCropper`, `UiCropModal`, `UiUploadAvatar`, `UiEmojiAnimation`.
+  - [x] Демонстрация в витрине `/ui-kit` (`ui-kit-extra-showcase.vue`).
 
+- [x] **Этап 22. Закрытие критичных уязвимостей бэкенда и БД** 🔒 ⭐
+  - [x] **22.1. Права доступа** ⭐
+    - [x] `authMiddleware` сверяет пользователя с БД: роль берётся из базы, заблокированный или удалённый пользователь теряет доступ сразу.
+    - [x] `GET /users` — только admin, `GET /users/:id` и `PATCH /users/:id/profile` — владелец или admin (`requireSelfOrAdmin`).
+    - [x] Нельзя сменить роль, заблокировать или удалить самого себя; роль проверяется по белому списку.
+    - [x] `POST /courses/import` требует admin/author (раньше был без авторизации).
+    - [x] `PATCH /assignments/:id/grade` — только admin/teacher/author; убраны подстановки `usr-student-1`.
+    - [x] `POST /progress/xp` — не более 100 XP за запрос.
+    - [x] Из ответов `users` убран `password_hash`; поиск очищается от символов, ломающих фильтр PostgREST.
+  - [x] **22.2. Защита сервера** ⭐
+    - [x] `helmet`, `express-rate-limit` (вход: 10 неудачных попыток / 15 мин, регистрация: 10 / час, сброс пароля: 5 / час).
+    - [x] Чужой origin → 403 (раньше 500); единый обработчик ошибок скрывает детали в продакшене; 404 для `/api/*`.
+    - [x] Срок токена настраивается `JWT_EXPIRES_IN` (по умолчанию 1 день); убран cookie `refreshToken`, дублировавший токен доступа.
+    - [x] Новый `JWT_SECRET` (96 символов).
+  - [x] **22.3. Закрыт прямой доступ к БД по публичному ключу** ⭐
+    - [x] Раньше анон-ключ из браузера читал `users` (с `password_hash`) и по политикам «USING (true)» мог писать. Политики убраны из `supabase-schema.sql`, добавлена миграция `supabase-rls-lockdown.sql`.
+    - [x] С фронтенда удалён клиент Supabase, `@supabase/supabase-js` и ключ из `.env`.
+  - [ ] **22.4. Не сделано** — восстановление пароля (нужен SMTP/почтовый сервис), перенос заданий из памяти сервера в БД, серверный расчёт XP.
 
+- [x] **Этап 23. Автотесты бэкенда (`projects/Back/tests/unit`)** 🧪 ⭐
+  - [x] Jest + ts-jest + supertest, `npm test` в `projects/Back`; приложение вынесено в `src/app.ts`, `src/index.ts` только слушает порт.
+  - [x] In-memory имитация Supabase (`helpers/fake-supabase.ts`): реальная база и ключи в тестах не используются; учитывает список колонок `select`.
+  - [x] `auth.spec.ts` — регистрация (белый список ролей, пароль, дубли, нормализация email, bcrypt), вход (бэкдор `123456`, бан, единое сообщение об ошибке), `/me`, logout.
+  - [x] `permissions.spec.ts` — проверка JWT (подделка, `alg: none`, просрочка), сверка с БД (бан, удаление, смена роли), матрица прав для users / courses / assignments / progress, лимит XP.
+  - [x] `server-hardening.spec.ts` — CORS (в т.ч. похожие origin и preflight), helmet, 404, битый JSON, 413, очистка поискового запроса.
+  - [x] `rate-limit.spec.ts` — лимиты входа, регистрации и сброса пароля.
+  - [x] Всего 95 тестов. Проверено «мутациями»: при отключении защиты тесты падают.
 
+---
+
+## 🚦 Перед релизом v1.0.0 (чек-лист на стороне владельца)
+- [ ] Закоммитить и запушить `lern_ui_kit` (ветка `release-1.0.0.0`), затем `npm install` в `lern_host`: хост получает кит из git, а не из локальной папки.
+- [x] Сгенерировать новый `JWT_SECRET` (≥ 32 случайных символа) в `projects/Back/.env`.
+- [x] В Supabase обновить `password_hash` демо-аккаунтов (или удалить их): старый хеш не подходил ни к одному паролю.
+- [ ] Прописать в `CORS_ORIGIN` боевой адрес фронтенда, а в `VUE_APP_API_URL` — боевой адрес API.
+- [ ] Ручная проверка попап-компонентов (`UiDatePicker`, `UiTimePicker`, `UiMultiDropdown`, `UiCropModal`) во всех 7 темах.
+- [ ] Выполнить `projects/Back/supabase-rls-lockdown.sql` в Supabase SQL Editor (закрывает прямой доступ по публичному ключу).
+- [ ] Перед выкладкой удалить или сменить пароли демо-аккаунтов `admin@lern.ru` / `student@lern.ru`.
